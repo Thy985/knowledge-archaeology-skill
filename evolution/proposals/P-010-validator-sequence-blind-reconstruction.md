@@ -10,7 +10,7 @@ why: "6 Validator 全 PASS + Blind Reconstruction 8/8 无推翻，仍漏 F-05 �
 validation:
   - "Layer 5 mutation: 存在性正确但时序错误的 claim → validator 必须 detect"
   - "Layer 3 regression: deepseek-harness 时序盲重建 gold record"
-status: "proposed"
+status: "pending_human_gate"  # CI 全 PASS；HIGH/Medium 风险 → 治理阻止自动合并，待 Owner 审查
 ---
 
 ## 变更内容

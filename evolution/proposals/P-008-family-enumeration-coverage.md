@@ -14,7 +14,7 @@ validation:
   - "Layer 3 regression: 新增 deepseek-harness 家族枚举 gold records（guard/seam/approval-policy-layer）"
   - "Layer 4 benchmark: 现有 gate 不回退"
   - "Layer 5 mutation: 家族遗漏 mutation → detect=true"
-status: "proposed"
+status: "pending_human_gate"  # CI 全 PASS；HIGH/Medium 风险 → 治理阻止自动合并，待 Owner 审查
 ---
 
 ## 变更内容

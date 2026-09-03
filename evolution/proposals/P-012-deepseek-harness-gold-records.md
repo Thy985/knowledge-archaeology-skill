@@ -10,7 +10,7 @@ why: "独立验证提出 5 个可作 CI Gold Record 的 Benchmark/Regression cas
 validation:
   - "Layer 3 regression: 新增 gold records 全部通过"
   - "Layer 4 benchmark: 现有 gate 不回退"
-status: "proposed"
+status: "pending_human_gate"  # CI 全 PASS；HIGH/Medium 风险 → 治理阻止自动合并，待 Owner 审查
 ---
 
 ## 变更内容

@@ -14,7 +14,7 @@ validation:
   - "Layer 3 regression: 新增 deepseek-harness F-05 顺序 gold record"
   - "Layer 2 unit: ka_engine 新增 sequence_ok() 确定性判定"
   - "Layer 4 benchmark: 现有 gate 不回退"
-status: "proposed"
+status: "pending_human_gate"  # CI 全 PASS；HIGH/Medium 风险 → 治理阻止自动合并，待 Owner 审查
 ---
 
 ## 变更内容

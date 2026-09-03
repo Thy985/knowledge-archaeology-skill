@@ -10,7 +10,7 @@ why: "authority-analyst 未枚举 approval 策略解析链路（config 默认层
 validation:
   - "Layer 3 regression: 新增 approval 策略层枚举 gold record"
   - "Layer 4 benchmark: 现有 gate 不回退"
-status: "proposed"
+status: "pending_human_gate"  # CI 全 PASS；HIGH/Medium 风险 → 治理阻止自动合并，待 Owner 审查
 ---
 
 ## 变更内容

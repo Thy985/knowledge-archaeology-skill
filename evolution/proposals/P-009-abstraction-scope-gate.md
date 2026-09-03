@@ -13,7 +13,7 @@ validation:
   - "Layer 5 mutation: scope 泛化 KO mutation（claim 覆盖范围夸大）→ detect=true"
   - "Layer 3 regression: KO-03 scope 收紧 gold record"
   - "Layer 4 benchmark: 现有 gate 不回退"
-status: "proposed"
+status: "pending_human_gate"  # CI 全 PASS；HIGH/Medium 风险 → 治理阻止自动合并，待 Owner 审查
 ---
 
 ## 变更内容
