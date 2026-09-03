@@ -1,0 +1,13 @@
+# Policy Flow（第七类流）Gold Record —— 防止治理闭环被遗漏
+# 来源：v2.1 修订（用户指出"自我学习"是过度升维，代码事实是 append-only 规则累积）
+gold_type: required_flow_type
+flow_type: "policy"
+required_in_flow_atlas: true
+flow_definition: "决策 → 审批 → 策略固化 → 未来决策（治理反馈回路）"
+required_edge_facts:
+  - "策略加载 → 三态审批计算 → Guardian/用户审批 → 沙箱执行 → 修正案持久化（ArcSwap 热更新 + blocking IO 落盘）"
+  - "Skip 和 NeedsApproval 都携带 proposed_execpolicy_amendment；Forbidden 不携带（拒绝不可学习不变量）"
+forbidden_overabstraction:
+  - "把 policy flow 描述为'自我学习'（代码事实是 append-only 规则累积，无'基于结果评估→自动调优'环节）"
+  - "把 policy flow 与其他六类流合并（它是独立的治理闭环维度）"
+assertion: "若未来 Flow Atlas 缺少 policy flow 或错误描述为'自我学习' → CI FAIL"

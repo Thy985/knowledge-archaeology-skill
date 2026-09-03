@@ -1,0 +1,9 @@
+# Forbidden 不携带修正案 Gold Record —— 安全不变量（防止被破坏）
+# 来源：v2 考古关键发现（主控第一手核验 exec_policy.rs）
+gold_type: security_invariant
+invariant: "拒绝不可学习"
+statement: "三态审批中，Skip 和 NeedsApproval 都携带 proposed_execpolicy_amendment（可学习），Forbidden 不携带（拒绝不固化策略）"
+evidence_source: "exec_policy.rs:337-462 三态决策 + append_amendment_and_update"
+required_present: true
+assertion: "若未来 Skill 的考古产物声称'所有审批都携带修正案'或'Forbidden 也携带修正案' → CI FAIL（违反拒绝不可学习不变量）"
+rationale: "该不变量防止 Agent 因一次拒绝而永久改变策略——拒绝必须手动处理，不自动固化。"

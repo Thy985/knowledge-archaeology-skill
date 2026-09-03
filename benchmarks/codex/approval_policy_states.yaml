@@ -1,0 +1,16 @@
+# approval_policy 状态数 Gold Record —— 事实错误回归（防止重犯 v1 错误）
+# 来源：独立对抗审计确认（第一手代码核验 exec_policy.rs）
+# v1 错误：KO-01 声称 approval_policy 是三态；实际是四态
+gold_type: fact_regression
+fact: "approval_policy 枚举状态"
+actual_states:
+  - Never
+  - OnRequest
+  - Granular
+  - UnlessTrusted
+actual_state_count: 4
+forbidden_state_count: 3  # v1 错误值——任何 future skill 再声称三态 → CI FAIL
+forbidden_naming: "三态"
+evidence_source: "codex-rs/core/src/.../exec_policy.rs（approval_policy 枚举定义，四态）"
+assertion: "若未来 Skill 将 approval_policy 识别为三态（3 states）→ CI FAIL（Fact Error）"
+note: "v2/v3 考古已正确识别为四态；此记录永久防止倒退"

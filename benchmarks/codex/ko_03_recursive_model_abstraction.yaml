@@ -1,0 +1,11 @@
+# KO-03 Gold Record —— 递归模型过度升维（防止重犯 v1 错误）
+# 来源：独立对抗审计（benchmarks/codex/independent-audit-v1/02_ko_audit.md）
+# v1 错误：Synthesizer 把单实例"递归模型"包装成高阶 Pattern，独立审计发现它只是"环境隐式契约"
+gold_type: over_abstraction_regression
+claim_under_test: "Codex 的递归模型是一种高阶可迁移 Pattern（L3+）"
+actual_truth: "该机制只能解释为'环境隐式契约'——单实例观察，无重复结构支撑，不得升 L3+"
+expected_max_level: L2
+expected_promotion_legitimate: false
+# 防止：以后任何 skill 把单实例（independent_instances=1, different_modules=1）升到 L3+
+assertion: "若未来 Skill 将仅单实例支撑的机制声明为 L3+ → CI FAIL（Observed Structure 不是 Pattern）"
+evidence_source: "Codex v1 KO-03（过度升维）+ v2/v3 已降级处理"

@@ -1,0 +1,7 @@
+{
+  "project": "codex",
+  "skill_version": "v3.1",
+  "evaluated_at": "2026-09-03",
+  "critical_coverage": 0.94,
+  "basis": "v3 补齐 v1 全部 6 项 Critical Missing（exec_policy / Guardian / 网络审批 / 上下文治理 / rollout_budget / PermissionProfile SSOT）"
+}

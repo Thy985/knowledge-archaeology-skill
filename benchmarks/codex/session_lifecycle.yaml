@@ -1,0 +1,18 @@
+# session_lifecycle Gold Record —— Weak<Session> 生命周期降级机制（正确机制回归）
+# 来源：v2/v3 考古 + 主控第一手代码核验（network_approval.rs）
+# 价值：L1/L2 工程知识，即使"不够抽象"也绝不等于"不重要"（用户方法论铁律）
+gold_type: required_mechanism
+knowledge_id: EK-session-lifecycle
+mechanism: "网络审批代理使用 Weak<Session> 持有会话，避免循环引用；控制面 session 释放后，回调保守降级为 ask(\"not_allowed\")"
+required_present: true
+abstraction: L1  # 工程事实层——保留为 Engineering Knowledge，不强行升维
+# 未来设计 API Gateway / Sidecar / Callback Runtime 时可直接复用的事实
+transferability:
+  - API Gateway
+  - Sidecar
+  - Callback Runtime
+key_facts:
+  - "Weak<Session> 断循环引用（network_approval.rs:1022）"
+  - "upgrade() 返回 None → ask(\"not_allowed\") 保守降级（与 Guardian fail-closed 同构）"
+  - "PendingApprovalDecision::Deny 是 drop 默认"
+assertion: "若未来 Skill 的考古产物遗漏此工程事实（或错误升维成 L3+）→ 按 Engineering Knowledge 底座要求判定"

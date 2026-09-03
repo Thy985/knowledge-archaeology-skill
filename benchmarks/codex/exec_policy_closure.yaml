@@ -1,0 +1,13 @@
+# exec_policy 策略固化闭环 Gold Record —— 防止 v1 重大遗漏重犯
+# 来源：独立对抗审计发现 v1 的 Critical Missing（exec_policy 策略系统）
+# v2/v3 已补齐：策略加载 → 三态审批 → 审批 → 沙箱执行 → 修正案持久化 → 未来免审
+gold_type: required_coverage
+coverage_area: "exec_policy 策略系统（持久化闭环）"
+required_present: true
+required_facts:
+  - "三态决策：Forbidden / Prompt→NeedsApproval / Allow→Skip（exec_policy.rs:337-462）"
+  - "修正案生成仅 Honor 模式（auto_amendment_allowed，exec_policy.rs:358）"
+  - "修正案持久化：Semaphore acquire → spawn_blocking 落盘 → 幂等检查 → add_prefix_rule → policy.store（exec_policy.rs:464-512）"
+  - "BANNED_PREFIX_SUGGESTIONS（88 个）+ 三道过滤（exec_policy.rs:57-146, 958-997）"
+assertion: "若未来 Skill 考古 agent 系统时遗漏 exec_policy 策略闭环 → CI FAIL（Critical Missing）"
+note: "Policy Flow 是第七类流；审批→策略固化→未来免审 是治理反馈回路（非'学习'——代码事实是 append-only 规则累积）"

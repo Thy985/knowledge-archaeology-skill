@@ -1,0 +1,7 @@
+{
+  "project": "codex",
+  "skill_version": "v3.1",
+  "evaluated_at": "2026-09-03",
+  "abstraction_validity": 0.91,
+  "basis": "v2 层级比 v1 保守（无 L5，2 L4 + 4 L3 + 1 L2）；v3 维持（2 L4 + 6 L3 无 L5）；Abstraction Promotion Gate 生效"
+}

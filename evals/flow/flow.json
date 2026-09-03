@@ -1,0 +1,7 @@
+{
+  "project": "codex",
+  "skill_version": "v3.1",
+  "evaluated_at": "2026-09-03",
+  "flow_integrity": 0.92,
+  "basis": "七类流全部锚定真实符号；Policy Flow 经 v2.1 修订（去掉'自我学习'过度升维，改为 append-only 规则累积）；Flow→KO 交叉校验门通过"
+}

@@ -1,0 +1,19 @@
+# Counterexample Budget（反例预算制）Gold Record —— 防止验证纪律被绕过
+# 来源：v2 核心机制（counterexample-hunter 反例预算制，≥3 定向攻击/高价值 KO）
+gold_type: validation_discipline
+mechanism: "反例预算制"
+rule: "每个 L3+ 高价值 KO 必须经历 ≥3 个定向反例攻击（bypass / exception / override / admin path / test-only / legacy path）"
+required: true
+counterexample_budget: 3
+search_targets:
+  - bypass
+  - exception
+  - override
+  - admin_path
+  - fallback
+  - direct_call
+  - legacy_path
+  - special_case
+  - test_only_path
+assertion: "若未来 Validation Report 声称高价值 KO '0 反例' 但没有 searched_paths 搜索证据 → CI FAIL（v1 教训：声称 0 反例实际未搜）"
+note: "v1 声称 7/7 PASS、0 反例、0 冲突——独立审计发现 False Acceptance ≈43%。反例预算制防止此问题重犯。"

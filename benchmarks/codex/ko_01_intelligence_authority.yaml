@@ -1,0 +1,11 @@
+# KO-01 Gold Record —— Intelligence ≠ Authority（正确认知回归）
+# 防止：该高价值认知被删除/降级/错误抽象
+knowledge_id: KO-01
+gold_type: required_knowledge   # 必须存在的正确认知
+claim: "Intelligence ≠ Authority：判断力（智能）与执行权（权威）是两个独立维度。"
+required_level: L4
+required_value: A
+required_status: "Validated Pattern"
+required_present: true
+# 如果未来的 Skill 产出中 KO-01 缺失、层级 < L4、价值 < A → CI FAIL
+rationale: "Codex v1/v2/v3 三考古一致确认的核心认知；authority-analyst 独立验证；执行链五段式架构指纹（产生→验证→授权→执行→记录）结构性支撑。"
