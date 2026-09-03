@@ -7,6 +7,7 @@
 - 输入：一个开发很久的 Flutter 仓库（30+ ADR、8 份 audits、31 份 runs、4 份 spikes、手写 Markdown 解析器、公式渲染链路、Agent 验证工具链）
 - 输出（第一阶段）：44 知识对象（20 A / 21 B / 3 C）、9 决策模式、9 失败模式、12 证据链、统一模型（元原则 Trust Engineering + P1~P7）
 - 最终形态：飞书知识空间「Tafcm 项目知识库」（首页 + Project Layer + Knowledge Layer：Flow Atlas 七类流 + Core Engineering 四篇 + P1~P7 + Candidates）
+  > ⚠️ 历史案例注记：Tafcm 落飞书是**当时用户显式授权**的交付。**v3.2 起默认交付已改为 push 到 `knowledge-archaeology-corpus` 仓库，飞书需用户显式授权（默认不做）**——本示例仅用于展示三层知识库的内容结构，交付决策以 `references/delivery.md` 为准。
 
 ## 二、五层阶梯完整示范
 
