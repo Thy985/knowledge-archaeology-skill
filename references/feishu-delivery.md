@@ -1,5 +1,7 @@
 # 飞书落地（Feishu Delivery）
 
+> **v3.2 前置门槛：本文件仅在用户显式授权后执行（"落飞书 / 建飞书知识库 / 沉淀到飞书"等明确指令）。默认不做飞书落盘——默认交付走 `delivery.md`（push 到 `knowledge-archaeology-corpus` 仓库）。**
+> 授权后建议：corpus push（持久档案）+ 飞书落盘（可检索视图）两者都做。
 > 先读 lark-wiki / lark-doc skill 再动手。本文件只记录本 skill 验证过的落地模式。
 
 ## 三层结构（v3 + v3.1：避免"过度压缩"与"EK 退化"）

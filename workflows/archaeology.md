@@ -4,10 +4,11 @@
 > v2 变更：①新增 policy-governance-analyst ②flow-miner 构建七类流（+Policy）③Synthesis 加 Flow→KO 门 ④Validation 先 Blind Reconstruction。
 > v3 变更：①新增 engineering-knowledge-miner ②Synthesis 产出**两层**（Engineering Knowledge 宽底座 + Generalized KO 窄尖顶）③三层知识架构贯穿 ④Project Layer 由 repository-mapper 明确产出。
 > v3.1 变更：①engineering-knowledge-miner 必须为每条 EK 声明 **links**（6 类边，EK 是图的节点）②Synthesis 阶段 KO 必须声明 **aggregation_rule**（R1-R4 聚合规则，EK→KO 从图上的簇生成，禁止拍脑袋分组）③阶段 8 交付 EK Graph + 聚合规则说明。
+> v3.2 变更：④**默认交付 = push 到 `knowledge-archaeology-corpus` 仓库**（每项目顶级目录 `<project>/`）⑤**飞书落盘需用户显式授权，默认不做**（交付决策见 `references/delivery.md`）。
 
 ## 阶段 0 · 准备
 
-1. **边界声明**：只读、不改仓库、不写飞书（除非授权）
+1. **边界声明**：只读、不改仓库；**默认交付 = push 到 `knowledge-archaeology-corpus` 仓库**；**飞书写入需用户显式授权（默认不做）**
 2. **角色激活**（Orchestrator 按 SKILL.md 裁剪规则决定哪些角色上场）
 3. 启动 `repository-mapper` 建仓库地图 + **Project Layer**（项目地图：架构/模块/配置/生命周期/依赖/入口）
 
@@ -102,6 +103,13 @@ epistemic-auditor → 认知状态诚实？
 - **v2 指标**：False Acceptance / Critical Missing / Fact Error / Over-generalization（供 benchmark）
 - **v3 指标**：三层配比（Facts : Engineering : Generalized）、底座可回溯率、工程层保留完整度
 - **v3.1 指标**：EK 平均出边数（≥1 合格）、游离 EK 比例（<20% 合格）、聚合规则覆盖率（100%）、KO 平均簇规模（3~12 健康）
+
+### 交付决策（v3.2，见 `references/delivery.md`）
+
+1. **默认**：push 到 `knowledge-archaeology-corpus` 仓库 `<project>/` 目录（按目录约定整理：00-inventory / 01-project-layer / 02-engineering / 03-knowledge / 04-flow-atlas / 05-candidates / 06-validation）
+2. **飞书**：**仅用户显式授权**才执行飞书落盘（读 `references/feishu-delivery.md`），默认不做
+3. **仅本地**：用户只要分析不要沉淀时，只交付本地路径 + 汇报，不主动 push
+4. 交付前跑一遍 `references/delivery.md` §四自检清单
 
 ## 执行约束
 

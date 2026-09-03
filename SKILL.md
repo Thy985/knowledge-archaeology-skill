@@ -1,12 +1,12 @@
 ---
 name: knowledge-archaeology
-version: 3.1
-description: Multi-Agent Knowledge Archaeology System —— 把一个软件项目（仓库/代码/文档/ADR/测试/Issue/RUN/审计）只读"考古"成可长期复用、可升维、可落飞书知识库的知识资产。核心命题是"这个项目让我们认识到了什么"而非"这个项目有什么"。与单 Agent 顺序执行的区别：发现/提炼/升维/验证分离为相互制衡的认知角色，Agent 之间只传递结构化 Artifact（Evidence Pack / Knowledge Object），由 Orchestrator 调度、冲突裁决、质量闭环。v2 变更：①Validator 强制 Blind Reconstruction ②Abstraction Promotion Gate ③反例预算制 ④Policy Flow 第七类流 + policy-governance-analyst ⑤Flow→KO 交叉校验门。v3 变更：①**三层知识架构**（Project Layer / Engineering Knowledge / Generalized Knowledge）②新增 engineering-knowledge-miner ③"宽底座 + 窄尖顶"原则 ④knowledge_layer 字段 ⑤飞书三层交付。**v3.1 变更：①EK 不是扁平清单，是图（EK Graph）——每条 Engineering Knowledge 必须声明 links（6 类边：mechanism/subsystem/causal/dependency/constraint/contrast）②KO 不是手工挑选的 EK 列表，是 EK 图上的簇——每个 KO 必须声明 aggregation_rule（R1 机制簇 / R2 因果链簇 / R3 不变量簇 / R4 主题簇）③新增 contracts/ek-graph-schema.md 定义边类型、聚合规则、簇成立五条件、防退化质量门。**触发场景：用户要求整理项目知识、做知识库、提炼项目经验/方法论/认知模型、把项目沉淀到飞书知识空间、项目复盘升维、跨项目模式提炼、深度项目理解。
+version: 3.2
+description: Multi-Agent Knowledge Archaeology System —— 把一个软件项目（仓库/代码/文档/ADR/测试/Issue/RUN/审计）只读"考古"成可长期复用、可升维、可沉淀的知识资产。核心命题是"这个项目让我们认识到了什么"而非"这个项目有什么"。与单 Agent 顺序执行的区别：发现/提炼/升维/验证分离为相互制衡的认知角色，Agent 之间只传递结构化 Artifact（Evidence Pack / Knowledge Object），由 Orchestrator 调度、冲突裁决、质量闭环。v2 变更：①Validator 强制 Blind Reconstruction ②Abstraction Promotion Gate ③反例预算制 ④Policy Flow 第七类流 + policy-governance-analyst ⑤Flow→KO 交叉校验门。v3 变更：①**三层知识架构**（Project Layer / Engineering Knowledge / Generalized Knowledge）②新增 engineering-knowledge-miner ③"宽底座 + 窄尖顶"原则 ④knowledge_layer 字段 ⑤三层交付。**v3.1 变更：①EK 不是扁平清单，是图（EK Graph）——每条 Engineering Knowledge 必须声明 links（6 类边：mechanism/subsystem/causal/dependency/constraint/contrast）②KO 不是手工挑选的 EK 列表，是 EK 图上的簇——每个 KO 必须声明 aggregation_rule（R1 机制簇 / R2 因果链簇 / R3 不变量簇 / R4 主题簇）③新增 contracts/ek-graph-schema.md 定义边类型、聚合规则、簇成立五条件、防退化质量门。**v3.2 变更：①**默认交付 = 上传考古结果到 `knowledge-archaeology-corpus` 仓库**（每项目一个顶级目录 `<project>/`）②**飞书落盘需用户显式授权，默认不做**（新增 references/delivery.md 统一交付规范）。**触发场景：用户要求整理项目知识、做知识库、提炼项目经验/方法论/认知模型、把项目沉淀到 corpus 知识仓库/飞书知识空间（飞书需授权）、项目复盘升维、跨项目模式提炼、深度项目理解。
 ---
 
-# Multi-Agent Knowledge Archaeology v3.1
+# Multi-Agent Knowledge Archaeology v3.2
 
-把工程项目从"事实"升维成"认知模型"的**认知生产系统**。本 skill 由 Tafcm 考古任务迭代而来，已从"单 Agent 顺序执行"升级为"多 Agent 分工、交叉验证、冲突裁决、质量闭环"的架构。v2 由 Codex v1 Benchmark（Status: FAILED QUALITY GATE）驱动——该基准暴露了过度综合/过度升维/同源自我确认三大缺陷，v2 用 F1-F6 设计需求逐一修复。v3 由用户方法论升级驱动——知识库不能只有"升维后的知识"，原始事实、关键实现、失败案例、决策过程同样是认知资产（见 `benchmarks/codex/lessons-for-v3.md（本 skill 的基准演进记录，见 workflows/benchmark.md）`）。**v3.1 由 Codex v3 考古的 EK 退化风险驱动**——52 条 EK 只有分类（7 类）没有连接（边），KO 引用 EK 是多对多但无聚合规则，导致 EK 层退化成"模块说明"；v3.1 用 EK Graph（6 类边）+ 聚合规则（R1-R4）修复（见 `contracts/ek-graph-schema.md`）。
+把工程项目从"事实"升维成"认知模型"的**认知生产系统**。本 skill 由 Tafcm 考古任务迭代而来，已从"单 Agent 顺序执行"升级为"多 Agent 分工、交叉验证、冲突裁决、质量闭环"的架构。v2 由 Codex v1 Benchmark（Status: FAILED QUALITY GATE）驱动——该基准暴露了过度综合/过度升维/同源自我确认三大缺陷，v2 用 F1-F6 设计需求逐一修复。v3 由用户方法论升级驱动——知识库不能只有"升维后的知识"，原始事实、关键实现、失败案例、决策过程同样是认知资产（见 `D:\Projects\Active\codex-archaeology\benchmarks\codex\lessons-for-v3.md`）。**v3.1 由 Codex v3 考古的 EK 退化风险驱动**——52 条 EK 只有分类（7 类）没有连接（边），KO 引用 EK 是多对多但无聚合规则，导致 EK 层退化成"模块说明"；v3.1 用 EK Graph（6 类边）+ 聚合规则（R1-R4）修复（见 `contracts/ek-graph-schema.md`）。
 
 ## 第一原则
 
@@ -14,7 +14,7 @@ description: Multi-Agent Knowledge Archaeology System —— 把一个软件项�
 - **发现 ≠ 提炼 ≠ 升维 ≠ 验证**——这四件事天然存在认知冲突，必须由不同角色承担，禁止同一角色自我确认
 - **Agent 之间只传递结构化 Artifact，不传递长文本报告**——否则退化为"token 接力"，不是真协作
 - **验证 = 重新做一遍再判断**（Blind Reconstruction），不是"证明这个答案没问题"
-- **只读**：禁止修改代码/文档/ADR/Issue/PR/git history；飞书写入需用户授权
+- **只读**：禁止修改代码/文档/ADR/Issue/PR/git history；**默认交付 = 上传考古结果到 `knowledge-archaeology-corpus` 仓库（每项目一个顶级目录 `<project>/`）**；**飞书写入需用户显式授权，默认不做**（详见 `references/delivery.md`）
 - 核心问题永远是：**"这个项目让我们认识到了什么？"**
 
 ## v3 核心：三层知识架构（宽底座 + 窄尖顶）
@@ -175,7 +175,7 @@ KO 必须从 EK 图上的**簇**生成，通过四种聚合路径：
 | **Engineering Knowledge Miner（v3）** | **总是激活**（工程知识层是三层架构的必要底座，即便小项目也至少产出核心机制） |
 | Pattern / Flow Miner | 项目达到中等规模（多模块、有内核） |
 | Counterexample Hunter | 已有升维候选（L3+），需要反例压力测试 |
-| Epistemic Auditor | 知识库要落地（飞书/对外交付）时 |
+| Epistemic Auditor | 交付到知识库/对外交付（corpus 或飞书）时 |
 | Security Analyst（全角色版） | 仅大型或高安全敏感项目 |
 
 小项目（< 5k 行）裁剪为：Code + Doc + Test → Evidence Assembly → Engineering Knowledge Miner + Synthesizer → Truth + Coverage Auditor → Reconciler。
@@ -188,7 +188,7 @@ KO 必须从 EK 图上的**簇**生成，通过四种聚合路径：
 | `contracts/` | 结构化 Artifact schema（evidence/knowledge/flow/epistemic-status/validation/**ek-graph**） | 任何角色产出/消费 Artifact 前必读 |
 | `protocols/` | 协作协议（provenance/handoff/disagreement/escalation/promotion/blind-reconstruction） | 跨角色交接/冲突/晋升/盲重建时 |
 | `workflows/` | 主流程（archaeology/validation/benchmark） | 进入对应阶段时 |
-| `references/` | 方法论参考（五层阶梯/三层架构/七类流/分类/飞书落地/工作示例） | 各角色执行时 |
+| `references/` | 方法论参考（五层阶梯/三层架构/七类流/分类/**交付指南（默认 corpus 仓库 + 飞书授权）**/工作示例） | 各角色执行时 |
 
 ## 核心机制（v2 + v3 关键差异）
 
@@ -236,4 +236,5 @@ KO 必须从 EK 图上的**簇**生成，通过四种聚合路径：
 - 完整考古：读 `workflows/archaeology.md`
 - 质量验证：读 `workflows/validation.md`
 - 基准测试（用已完成项目验证 skill，v3 以 Codex v2 基线为锚）：读 `workflows/benchmark.md`
-- 三层架构方法论：读 `references/five-layer-ladder.md` §三层映射 + `references/feishu-delivery.md`
+- 三层架构方法论：读 `references/five-layer-ladder.md` §三层映射 + `references/delivery.md`（默认交付规范）
+- 飞书落盘（**仅用户显式授权后**）：读 `references/feishu-delivery.md`
