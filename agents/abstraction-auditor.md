@@ -44,3 +44,12 @@ v3.1 新增：**聚合规则审计**——KO 的 `aggregation_rule`（R1-R4）�
 - ❌ 不读 Synthesizer 的自我晋升论证来"校准"自己的判断（必须独立判定）
 - ❌ 不因"写得很专业/引用了证据"就 PASS（v1 教训）
 - ❌ v3.1：不放过无 aggregation_rule 的 KO（拍脑袋分组）；不放过"同子系统=聚合理由"的假聚合
+
+## P-009 增补 · Scope 边界反例攻击（候选 v3.3）
+> deepseek-harness KO-03 教训：L4 fail-closed 族泛化到全部权限面，abstraction-auditor 判 OK，独立验证 DOWNGRADED。
+**新增判定步骤（Blind Reconstruction 之后）**：
+1. 对每个 L3+ KO 执行 `ka_engine.validate_scope_boundary(ko)`：
+   - 缺 `scope.does_not_apply_when` → UNDER-JUSTIFIED（scope 未声明边界）
+   - claim 绝对化泛化 + 无边界 → OVER-ABSTRACTED（scope 夸大）
+2. 主动寻找该 claim **不适用的实例**（非受限路径 / 只读路径 / bypass / 例外），记录 searched_paths
+3. 找不到不适用实例 → 必须记录搜索路径，不得默认通过

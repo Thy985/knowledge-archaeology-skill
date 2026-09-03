@@ -1,0 +1,15 @@
+# F-05 顺序 Gold Record —— Authority Flow 真实顺序（P-007 回归）
+# 来源：deepseek-harness 独立验证 IF-01（tools/index.ts:1367,1400,1468-1493）
+# 防止：把 approval 放在 guards 之后（原报告错误）
+gold_type: required_sequence_fact
+knowledge_id: "flow_sequence_f05"
+sequence_claim: "受控工具执行真实顺序：collapse-check → pre-execute → approval(ask) → guards → execute"
+sequence_steps:
+  - "collapse-check（确定性失败，先于策略管线）"
+  - "pre-execute waterfall"
+  - "approval（gate.kind==='ask' 时触发，在 guards 之前）"
+  - "guards（仅 decision.allow 时评估，monotonic denial）"
+  - "execute"
+required_present: true
+evidence_source: "packages/core/tools/src/index.ts:1367,1400,1468-1493"
+assertion: "若未来 Flow Atlas 把 approval 置于 guards 之后 → CI FAIL（Sequence Truth）"

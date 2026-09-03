@@ -46,3 +46,13 @@ v3.1 新增：**EK 图覆盖**——孤立 EK 检测（无边 EK 比例）、子
 - ❌ 不放过"evidence 层有但未升维"的 synthesis 遗漏（v1 教训：SF-05 有却未成 KO）
 - ❌ 不因"已有关注点很丰富"就跳过未覆盖的高密度子系统
 - ❌ v3.1：不放过孤立 EK 比例超标（>20%）——工程层"图"未建立，必然退化成模块说明
+
+## P-008 增补 · 同构机制家族全实例枚举（候选 v3.3）
+> deepseek-harness 教训：guard 家族只发现 timeout-policy（遗漏 repeat-tool-reminder）；seam 家族只发现 4 个（遗漏 settings）。
+> **机制家族 ≠ 子系统**——家族是"共享同一实现机制的实例集合"，子系统是"同一模块边界"。
+
+**新增步骤**：
+1. 识别机制家族（从依赖图/目录/注册表扫描）：guard 家族、seam/provider 家族、approval 策略层、policy provider 家族…
+2. 对每个家族**枚举全部实例**——缺任一实例 → `CRITICAL FAMILY MISSING`（等价 Critical Knowledge Missing）
+3. "找到一个实例就宣布覆盖" → 判定 MISSING
+4. 家族枚举结果写入覆盖矩阵（新增"家族枚举"列）

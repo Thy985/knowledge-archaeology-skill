@@ -72,3 +72,17 @@ Decision → Approval → Policy → Enforcement → Future Decision
 - 例：`产生→验证→授权→执行→记录` 在多条流反复出现 → 报告为 `Observed repeated structure`
 - 例：`Decision→Approval→Policy→Enforcement→Future` 在 exec_policy/权限升级/上下文治理中重复 → 报告为 Policy Flow 重复结构
 - **不得**自行宣布"这是普遍原则"——那是 Synthesizer + Abstraction Auditor 的职责
+
+## P-007 增补 · Sequence Truth（顺序锚点）— 候选 v3.3
+> deepseek-harness F-05 教训：approval/guards 位置颠倒，symbol 都存在、condition 都对，flow-auditor 仍判 VERIFIED。
+> **chain 的顺序与 chain 的内容同等重要**——顺序错误是 Flow 最隐蔽的 False Acceptance 源。
+
+**新增字段**：
+- 每个 chain 步骤可选 `sequence_anchor: {from, to, evidence}`（单数，声明本步骤与相邻步骤的先后关系 + 证据）
+- chain 步骤可带 `sequence_anchors: [{from, to, evidence}]`（复数，显式相邻顺序证据）
+
+**强制规则**：
+- ≥2 步骤的 chain：**必须**至少一个步骤带 `sequence_anchor` 或 `sequence_anchors`；否则 `SEQUENCE_UNVERIFIED`（flow-auditor 判定，blocker）
+- 显式 `sequence_anchor.from` 的索引必须 `< to` 的索引；违反 → `SEQUENCE_CONTRADICTED`（INCORRECT，blocker）
+
+**判定函数**：`ka_engine.validate_flow_sequence(chain)`（Layer 2 单测 + Layer 5 mutation 已覆盖）。

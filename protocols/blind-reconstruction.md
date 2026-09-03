@@ -53,3 +53,13 @@ NEEDS_HUMAN_REVIEW  证据冲突无法自动裁决
 - ❌ 不因已有 KO "写得完整/专业/有证据引用"就默认正确
 - ❌ 阶段 A 不围绕任何预设结论收集证据
 - ❌ 不把"大概符合项目设计"当 PASS（必须有具体 symbol 证据）
+
+## P-010 增补 · 盲阶段必须重建时序与家族清单（候选 v3.3）
+> deepseek-harness 教训：6 Validator 全 PASS 仍漏顺序错误 + 家族遗漏——盲重建只验证了"知识存在性"。
+**盲阶段（阶段 A）新增强制输出**：
+1. `rebuilt_sequence`：从代码独立重建的关键时序（尤其 authority/policy flow 的调用顺序）
+2. `rebuilt_family_inventory`：从代码独立重建的机制家族实例清单（guard/seam/policy-provider…）
+**阶段 B 对比**：
+- 原考古产物缺任一重建的时序/家族项 → 判定 MISSING（不是"无推翻"）
+- 重建顺序与原产物顺序矛盾 → CONTRADICTED（blocker）
+> 只做"知识存在性"盲重建 → 判定盲重建未完成

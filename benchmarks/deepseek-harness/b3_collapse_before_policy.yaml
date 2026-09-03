@@ -1,0 +1,10 @@
+# B-3 Gold Record —— collapse 先于策略管线（required_mechanism 回归）
+# 来源：deepseek-harness 独立验证 B-3 + IF-04（tools/index.ts:1367-1411）
+# 防止：把 collapsed 调用写成"进入策略管线后再拒绝"
+gold_type: required_mechanism
+knowledge_id: "b3_collapse_before_policy"
+mechanism: "collapsed tool call 在策略管线（pre-execute/approval/guards）之前确定性拒绝（ToolNotFoundError），策略监听器不得观察注定失败的调用"
+required_present: true
+abstraction: "L2"
+evidence_source: "packages/core/tools/src/index.ts:1367-1411"
+assertion: "若未来 Flow/claim 把 collapse 拒绝放到策略管线之后 → CI FAIL"

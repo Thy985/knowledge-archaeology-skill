@@ -22,3 +22,13 @@
 - ❌ 不只看设计文档的权限模型——必须对照代码实际
 - ❌ 不忽略 bypass（它是条件化知识的来源）
 - ❌ 非 Agent/runtime 项目不激活（由 Orchestrator 裁剪）
+
+## P-011 增补 · approval 策略解析链路强制枚举（候选 v3.3）
+> deepseek-harness 教训：approval 策略模型被简化成单层，遗漏 config/override/delegation。
+**权限/审批分析必须枚举完整解析链路**：
+1. `effectivePolicy = overrideOf(session) ?? config.policy ?? 'ask'`（config 默认层 + session override 两层）
+2. session override 以 `approval/policy` 事件持久化
+3. 子会话委派 `source:'delegation'` 播种 override（跨子会话策略继承）
+4. collapse 前置拒绝（collapsed 调用在策略管线前确定性失败）
+5. guard 家族两类成员：enforcer（timeout-policy 等）+ advisory（repeat-tool-reminder 等）
+> 缺任一层 → authority 分析不完整，判定 MISSING

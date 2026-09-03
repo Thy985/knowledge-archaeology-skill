@@ -142,3 +142,14 @@ Generalized Knowledge（KO，窄尖顶）
 - **v2 新增**：`flow_traceability` 必须非空——L1 事实必须能回溯 Flow Edge，否则 KO 不通过 Flow→KO 交叉校验门
 - **v2 新增**：`validation.blind_reconstruction` 必须为 performed，否则该 KO 的验证结果无效
 - **v3 新增**：`knowledge_layer` 必须显式声明——默认不是 generalized；engineering 对象不强行升维，generalized 对象必须有底层底座可回溯
+
+## P-009 增补 · L3+ KO scope 边界强制 — 候选 v3.3
+> deepseek-harness KO-03 教训：fail-closed 族 claim 泛化到"全部权限面"，实际仅适用受限执行路径。
+> **升维检查不只查"层级是否过高"，还要查"范围是否被夸大"**。
+
+**强制规则**（abstraction ∈ {L3, L4, L5}）：
+- `scope.applies_when` 必填（声明适用边界）
+- `scope.does_not_apply_when` 必填（声明不适用实例——**scope 反例**）
+- claim 含绝对化泛化词（所有/全部/整个/任何/所有路径/all/every）且 scope 无 `does_not_apply_when` → 判定"scope 可能被夸大"
+
+**判定函数**：`ka_engine.validate_scope_boundary(ko)`（Layer 2 单测 + Layer 5 mutation 已覆盖）。

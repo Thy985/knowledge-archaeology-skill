@@ -1,0 +1,12 @@
+# approval 策略层 Gold Record —— 三层解析 + delegation 委派（P-011 回归）
+# 来源：deepseek-harness 独立验证 IF-03（user-approval/src/index.ts:29-35,236）
+# 防止：把 approval 策略模型简化成单层
+gold_type: required_coverage
+knowledge_id: "approval_policy_layers"
+coverage_area: "approval 策略解析链路"
+required_present: true
+required_facts:
+  - "effectivePolicy = overrideOf(session) ?? config.policy ?? 'ask'（两层解析：config 默认层 + session override）"
+  - "session override 以 approval/policy 事件持久化"
+  - "子会话委派用 source:'delegation' 播种 override（跨子会话策略继承）"
+assertion: "若未来考古遗漏 config/override/delegation 任一层 → CI FAIL"
