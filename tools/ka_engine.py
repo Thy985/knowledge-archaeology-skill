@@ -4,14 +4,64 @@
 设计原则：
 - 纯函数、无副作用、可单测
 - 规则来源：contracts/knowledge-schema.md + contracts/epistemic-status.md + contracts/ek-graph-schema.md
+- 规则阈值统一从 rules/*.json 权威规则集加载，禁止在代码里硬编码
 - 本文件是 Layer 2 Deterministic Unit Tests 的直接测试对象
 """
 
 from __future__ import annotations
 
+import json
 import re
 from dataclasses import dataclass, field
+from pathlib import Path
 from typing import Any, Dict, List, Optional
+
+REPO_ROOT = Path(__file__).resolve().parent.parent
+RULES_DIR = REPO_ROOT / "rules"
+
+
+# ---------------------------------------------------------------------------
+# 规则集加载（权威规则集 = rules/*.json，替代硬编码）
+# ---------------------------------------------------------------------------
+
+_rules_cache: Dict[str, dict] = {}
+
+
+def load_rules_file(name: str) -> dict:
+    """加载 rules/<name>.json。带缓存；文件缺失时返回 {}（调用方负责默认值/报错）。"""
+    if name in _rules_cache:
+        return _rules_cache[name]
+    path = RULES_DIR / f"{name}.json"
+    data: dict = {}
+    if path.exists():
+        data = json.loads(path.read_text(encoding="utf-8"))
+    _rules_cache[name] = data
+    return data
+
+
+def get_promotion_gate() -> dict:
+    """Promotion Gate 硬门槛（rules/quality-gates.json → promotion_gate）。"""
+    return load_rules_file("quality-gates").get("promotion_gate", {})
+
+
+def get_promotion_rules() -> dict:
+    """晋升确定性规则（rules/promotion-rules.json → rules）。"""
+    return load_rules_file("promotion-rules").get("rules", {})
+
+
+def get_ek_graph_rules() -> dict:
+    """EK Graph 质量规则（rules/ek-graph-rules.json → ek_graph_gates）。"""
+    return load_rules_file("ek-graph-rules").get("ek_graph_gates", {})
+
+
+def get_ideal_ratio() -> dict:
+    """三层配比（rules/ek-graph-rules.json → ideal_ratio）。"""
+    return load_rules_file("ek-graph-rules").get("ideal_ratio", {})
+
+
+def get_risk_rules() -> dict:
+    """自动合并风险分级（rules/risk-paths.json）。"""
+    return load_rules_file("risk-paths")
 
 
 # ---------------------------------------------------------------------------
@@ -47,22 +97,10 @@ VALID_AGENTS = [
     "abstraction-auditor", "counterexample-hunter", "epistemic-auditor",
     "reconciler",
 ]
-# 文档约定的理想配比（宽底座 + 窄尖顶）
-IDEAL_RATIO = {
-    "facts_min": 100,
-    "engineering_min": 40,
-    "engineering_max": 60,
-    "generalized_min": 7,
-    "generalized_max": 12,
-}
-# EK Graph 质量门（v3.1）
-EK_GRAPH_GATES = {
-    "min_avg_edges": 1.0,      # EK 平均出边数 ≥ 1
-    "max_isolated_ratio": 0.20,  # 游离 EK 比例 < 20%
-    "aggregation_coverage": 1.0,  # 聚合规则覆盖率 = 100%
-    "ko_cluster_min": 3,          # KO 平均簇规模 3~12 健康
-    "ko_cluster_max": 12,
-}
+# 文档约定的理想配比（宽底座 + 窄尖顶）——从 rules/ek-graph-rules.json 加载
+IDEAL_RATIO = get_ideal_ratio()
+# EK Graph 质量门（v3.1）——从 rules/ek-graph-rules.json 加载
+EK_GRAPH_GATES = get_ek_graph_rules()
 
 
 # ---------------------------------------------------------------------------
@@ -221,7 +259,7 @@ class PromotionInput:
 def compute_max_abstraction(pi: PromotionInput) -> str:
     """根据证据强度计算允许的最高抽象层（确定性规则）。
 
-    规则来源：contracts/epistemic-status.md + references/five-layer-ladder.md
+    规则来源：rules/promotion-rules.json（权威规则集，勿在此硬编码阈值）
     核心原则：
     - 单实例、无跨上下文 → 最高 L2（工程知识）
     - 有重复结构（≥2 独立实例）→ L3（Pattern），但需 ≥2 独立模块
@@ -229,43 +267,53 @@ def compute_max_abstraction(pi: PromotionInput) -> str:
     - L5（Methodology）需要跨项目验证（S8）或人类确认 + 强证据
     - 反例存在 → 降级；counterexample 预算未满足 → 不得升 L3+
     """
+    pr = get_promotion_rules()
+    cb_blocks_above = pr.get("counterexample_blocks_above", "L2")
+    l3_req = pr.get("l3_requires", {"independent_instances_min": 2, "different_modules_min": 2})
+    l4_req = pr.get("l4_requires", {})
+    l5_req = pr.get("l5_requires", {})
+
     # 反例压制：任何反例都禁止升到 L3+
     if pi.counterexamples_found > 0:
-        return "L2"
+        return cb_blocks_above
 
     # 反例预算：L3+ 必须有 ≥3 反例攻击记录（counterexample-hunter 预算制）
     # 该检查由调用方传入 budget_satisfied；此处用 counterexamples_found 表示已执行搜索，
     # 无法区分"搜索了 0 个"和"没搜"。调用方负责传 budget 信息。
 
     # 跨项目验证 → 允许 L5（但仍需强证据）
-    if pi.cross_project and pi.runtime_validated and pi.counterexamples_found == 0:
+    if (pi.cross_project and pi.runtime_validated and pi.counterexamples_found == 0
+            and l5_req.get("cross_project", True)):
         return "L5"
 
     # 人工确认 + 运行时 + 跨上下文 → L4
     if (pi.human_confirmed and pi.runtime_validated and pi.cross_context
-            and pi.independent_instances >= 2 and pi.counterexamples_found == 0):
+            and pi.independent_instances >= l4_req.get("independent_instances_min", 2)
+            and pi.counterexamples_found == 0):
         return "L4"
 
     # 跨上下文 + 运行时验证（无人工）→ L3（Pattern 已成型，但无 L4 稳定关系）
     if (pi.cross_context and pi.runtime_validated
-            and pi.independent_instances >= 2 and pi.counterexamples_found == 0):
+            and pi.independent_instances >= l3_req.get("independent_instances_min", 2)
+            and pi.counterexamples_found == 0):
         return "L3"
 
     # 重复结构（≥2 独立实例 + ≥2 不同模块）→ L3（Pattern）
-    if (pi.independent_instances >= 2 and pi.different_modules >= 2
+    if (pi.independent_instances >= l3_req.get("independent_instances_min", 2)
+            and pi.different_modules >= l3_req.get("different_modules_min", 2)
             and pi.counterexamples_found == 0):
         return "L3"
 
     # 单实例但跨上下文 → 观察到的结构（Observed Structure），不升 Pattern
-    if pi.cross_context and pi.independent_instances < 2:
-        return "L2"
+    if pi.cross_context and pi.independent_instances < l3_req.get("independent_instances_min", 2):
+        return pr.get("observed_structure_max", "L2")
 
     # 单一实现 + 解释因果 → L2（工程知识）
     if pi.evidence_count >= 1:
-        return "L2"
+        return pr.get("single_implementation_max", "L2")
 
     # 纯描述 → L1
-    return "L1"
+    return pr.get("pure_description_max", "L1")
 
 
 def check_promotion_legitimacy(pi: PromotionInput, claimed_level: str) -> Dict[str, Any]:

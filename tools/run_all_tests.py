@@ -24,6 +24,7 @@ REPO_ROOT = Path(__file__).resolve().parent.parent
 LAYERS = {
     1: ("Contract", ["tests", "contract", "test_skill_integrity.py"]),
     2: ("Deterministic Unit", ["tests", "unit", "test_ka_engine.py"]),
+    2.1: ("Ruleset + PR Risk", ["tests", "unit", "test_ruleset_and_pr_risk.py"]),
     3: ("Knowledge Regression", ["tests", "regression", "test_codex_regression.py"]),
     4: ("Benchmark", ["tests", "benchmark", "test_benchmark_gates.py"]),
     5: ("Mutation / Adversarial", ["tests", "mutation", "test_mutation.py"]),

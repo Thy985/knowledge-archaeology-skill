@@ -1,0 +1,34 @@
+{
+  "_comment": "Epistemic Promotion 确定性规则 —— 输入证据特征 → 允许的最高抽象层。源自 contracts/epistemic-status.md + references/five-layer-ladder.md。",
+  "version": "1.0.0",
+  "rules": {
+    "counterexample_blocks_above": "L2",
+    "cross_project_max": "L5",
+    "observed_structure_max": "L2",
+    "single_implementation_max": "L2",
+    "pure_description_max": "L1",
+    "l3_requires": {
+      "independent_instances_min": 2,
+      "different_modules_min": 2
+    },
+    "l4_requires": {
+      "cross_context": true,
+      "runtime_validated": true,
+      "human_confirmed": true,
+      "independent_instances_min": 2
+    },
+    "l4_fallback": {
+      "note": "跨上下文+运行时验证但无人工确认 → 只允许 L3（Pattern 成型，无 L4 稳定关系证据）"
+    },
+    "l5_requires": {
+      "cross_project": true,
+      "runtime_validated": true
+    }
+  },
+  "high_risk_transitions": [
+    "ADR intention -> implementation fact",
+    "single example -> pattern",
+    "project pattern -> universal principle",
+    "Fact -> Principle without intermediate derivation"
+  ]
+}

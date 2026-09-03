@@ -1,0 +1,20 @@
+{
+  "_comment": "knowledge-archaeology-skill 权威规则集 v1 —— Promotion Gate 硬门槛。ka_engine 与 CI 统一从此文件加载，禁止在代码里硬编码。",
+  "version": "1.0.0",
+  "promotion_gate": {
+    "regression": true,
+    "critical_coverage_min": 0.90,
+    "fidelity_min": 0.95,
+    "abstraction_validity_min": 0.90,
+    "false_acceptance_max": 0.10,
+    "critical_regressions_allowed": 0
+  },
+  "eval_sources": {
+    "fidelity": "evals/fidelity/fidelity.json",
+    "coverage": "evals/coverage/coverage.json",
+    "abstraction": "evals/abstraction/abstraction.json",
+    "flow": "evals/flow/flow.json",
+    "epistemic": "evals/epistemic/epistemic.json"
+  },
+  "gate_principle": "即使总分上升，只要任一硬门槛未过即 FAIL——防止用漂亮但错误的知识换分数"
+}

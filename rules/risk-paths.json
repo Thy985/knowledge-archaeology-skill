@@ -1,0 +1,56 @@
+{
+  "_comment": "自动合并风险分级（Progressive Autonomy）。文件路径自动判定风险等级，不再依赖人工 label。",
+  "version": "1.0.0",
+  "risk_levels": {
+    "high": {
+      "note": "即使 Quality Gate PASS 也永不自动合并，必须 Human Gate",
+      "paths": [
+        "contracts/epistemic-status*",
+        "contracts/validation-schema*",
+        "contracts/knowledge-schema*",
+        "contracts/ek-graph-schema*",
+        "contracts/evidence-schema*",
+        "contracts/flow-schema*",
+        "agents/**",
+        "workflows/**",
+        "protocols/promotion*",
+        "protocols/escalation*",
+        "protocols/disagreement*",
+        "protocols/blind-reconstruction*",
+        "rules/**",
+        "tools/ka_engine.py"
+      ]
+    },
+    "medium": {
+      "note": "需人工审",
+      "paths": [
+        "protocols/*",
+        "references/**"
+      ]
+    },
+    "low": {
+      "note": "Quality Gate 通过自动合并",
+      "paths": [
+        "README*",
+        "docs/**",
+        "tests/**",
+        "evals/**",
+        "benchmarks/**",
+        "evolution/**",
+        "*.yaml",
+        "*.yml",
+        "*.json"
+      ]
+    }
+  },
+  "auto_merge": {
+    "enabled": true,
+    "require_quality_gate": true,
+    "phase": 2,
+    "phase_notes": "Phase 2: 低风险自动合并；Phase 3: 连续 N 次成功自动晋升；Phase 4: 重大架构改变永远人工"
+  },
+  "priority": {
+    "_comment": "风险判定优先级：任一 High 路径命中 → High；否则任一 Medium → Medium；否则全 Low → Low",
+    "high_wins": true
+  }
+}

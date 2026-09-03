@@ -5,17 +5,16 @@
 #
 # 5 层：
 #   Layer 1  Contract           Skill 结构完整性
-#   Layer 2  Deterministic      晋升/聚合确定性逻辑
+#   Layer 2  Deterministic      晋升/聚合确定性逻辑 + 规则集合法性 + PR 风险分级
 #   Layer 3  Regression         Codex Gold Records（过去错误永久封锁）
 #   Layer 4  Benchmark          Quality Gates（硬门槛）
 #   Layer 5  Mutation           坏知识检测
 #
 # Quality Gate：5 层全 PASS 才允许合并（不是"CI 通过就无条件合并"）。
-# Progressive Autonomy：
-#   - 默认：CI PASS → Agent 建 PR → Human 审
-#   - 低风险自动合并（label: auto-merge-low-risk）：CI PASS 且非 High Risk 文件变更
-#   - High Risk（epistemic promotion / validation policy / agent orchestration）：
-#     CI PASS 也永不自动合并，必须 Human Gate
+# Progressive Autonomy（rules/risk-paths.json 自动分级，不依赖人工 label）：
+#   - Low 风险（tests/benchmarks/evals/evolution/docs）→ Quality Gate PASS → 自动合并
+#   - Medium 风险（references/）→ 人工审
+#   - High 风险（agents/workflows/contracts 核心/protocols/rules/ka_engine）→ 永不自动合并
 
 name: skill-quality-gates
 
@@ -30,7 +29,7 @@ jobs:
   # ---------------------------------------------------------------
   # 5 层测试
   # ---------------------------------------------------------------
-  layers-1-3-5:
+  layers-1-2-3-5:
     name: Layers 1/2/3/5 (Contract · Deterministic · Regression · Mutation)
     runs-on: ubuntu-latest
     steps:
@@ -40,8 +39,10 @@ jobs:
           python-version: "3.12"
       - name: Layer 1 · Contract Tests
         run: python tests/contract/test_skill_integrity.py
-      - name: Layer 2 · Deterministic Unit Tests
-        run: python tests/unit/test_ka_engine.py
+      - name: Layer 2 · Deterministic Unit + Ruleset + PR Risk
+        run: |
+          python tests/unit/test_ka_engine.py
+          python tests/unit/test_ruleset_and_pr_risk.py
       - name: Layer 3 · Knowledge Regression Tests
         run: python tests/regression/test_codex_regression.py
       - name: Layer 5 · Mutation / Adversarial Tests
@@ -50,7 +51,7 @@ jobs:
   layer-4-benchmark:
     name: Layer 4 · Benchmark + Quality Gate
     runs-on: ubuntu-latest
-    needs: [layers-1-3-5]
+    needs: [layers-1-2-3-5]
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -65,15 +66,14 @@ jobs:
   quality-gate:
     name: Quality Gate (all 5 layers)
     runs-on: ubuntu-latest
-    needs: [layers-1-3-5, layer-4-benchmark]
+    needs: [layers-1-2-3-5, layer-4-benchmark]
     if: always()
     steps:
       - id: check
         run: |
-          echo "layers_1_3_5=${{ needs.layers-1-3-5.result }}"
+          echo "layers=${{ needs.layers-1-2-3-5.result }}"
           echo "layer_4=${{ needs.layer-4-benchmark.result }}"
-          echo "gate=${{ needs.layers-1-3-5.result == 'success' && needs.layer-4-benchmark.result == 'success' }}"
-          echo "quality_gate_passed=${{ needs.layers-1-3-5.result == 'success' && needs.layer-4-benchmark.result == 'success' }}" >> "$GITHUB_OUTPUT"
+          echo "quality_gate_passed=${{ needs.layers-1-2-3-5.result == 'success' && needs.layer-4-benchmark.result == 'success' }}" >> "$GITHUB_OUTPUT"
       - name: Fail if quality gate not passed
         if: steps.check.outputs.quality_gate_passed != 'true'
         run: |
@@ -84,71 +84,50 @@ jobs:
         run: echo "✅ QUALITY GATE PASSED —— 5 层全部通过"
 
   # ---------------------------------------------------------------
-  # Progressive Autonomy：低风险自动合并（High Risk 永远人工）
+  # Progressive Autonomy：文件路径自动风险分级 + 自动合并
   # ---------------------------------------------------------------
-  auto-merge-low-risk:
-    name: Progressive Autonomy (low-risk auto merge)
+  progressive-autonomy:
+    name: Progressive Autonomy (risk-based auto merge)
     runs-on: ubuntu-latest
     needs: [quality-gate]
-    if: |
-      github.event_name == 'pull_request' &&
-      contains(github.event.pull_request.labels.*.name, 'auto-merge-low-risk') &&
-      !contains(github.event.pull_request.labels.*.name, 'high-risk')
+    if: github.event_name == 'pull_request'
     permissions:
       contents: write
       pull-requests: write
     steps:
       - uses: actions/checkout@v4
-      - name: Check no High-Risk paths changed
-        id: highrisk
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Compute changed files + risk level (rules/risk-paths.json)
+        id: risk
         run: |
-          # High Risk 路径：epistemic promotion / validation policy / agent orchestration 变更
-          # 这些即使 CI PASS 也永不自动合并
-          CHANGED=$(git diff --name-only origin/main...HEAD || true)
+          # PR 变更文件（相对仓库根）
+          git fetch origin main --quiet || true
+          CHANGED=$(git diff --name-only origin/main...HEAD || git diff --name-only "${{ github.event.pull_request.base.sha }}" "${{ github.event.pull_request.head.sha }}" || true)
           echo "changed files:"
           echo "$CHANGED"
-          HIGH_RISK=$(echo "$CHANGED" | grep -E "(contracts/epistemic-status|contracts/validation-schema|agents/|workflows/|protocols/promotion|protocols/escalation|protocols/disagreement)" || true)
-          if [ -n "$HIGH_RISK" ]; then
-            echo "❌ High-Risk files changed — require human gate, no auto-merge"
-            echo "HIGH_RISK_CHANGED=true" >> "$GITHUB_OUTPUT"
-            exit 0
-          fi
-          echo "LOW_RISK_ONLY=true" >> "$GITHUB_OUTPUT"
-      - name: Auto-merge (low-risk, quality-gate passed)
-        if: steps.highrisk.outputs.LOW_RISK_ONLY == 'true'
+          # 用规则集自动判定风险（不依赖人工 label）
+          RISK_OUTPUT=$(python tools/evaluate_pr_risk.py $CHANGED)
+          echo "$RISK_OUTPUT"
+          RISK=$(echo "$RISK_OUTPUT" | grep -oP '^Risk level: \K\w+' || echo "medium")
+          echo "risk=$RISK" >> "$GITHUB_OUTPUT"
+      - name: Auto-merge (Low risk + Quality Gate passed)
+        if: steps.risk.outputs.risk == 'low'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          echo "Quality gate passed + low-risk changes only → auto-merge"
+          echo "Risk=low + Quality Gate passed → auto-merge (Phase 2)"
           gh pr merge "${{ github.event.pull_request.number }}" --merge --auto
-
-  # ---------------------------------------------------------------
-  # High-Risk 变更：必须 Human Gate（CI 只报告，不自动合并）
-  # ---------------------------------------------------------------
-  high-risk-requires-human:
-    name: High-Risk → Human Gate Required
-    runs-on: ubuntu-latest
-    if: |
-      github.event_name == 'pull_request' &&
-      (contains(github.event.pull_request.labels.*.name, 'high-risk') ||
-       contains(github.event.pull_request.labels.*.name, 'auto-merge-low-risk') == false)
-    needs: [quality-gate]
-    steps:
-      - name: Check high-risk paths
-        id: check
+      - name: Medium risk → request human review
+        if: steps.risk.outputs.risk == 'medium'
         run: |
-          git fetch origin main --quiet || true
-          CHANGED=$(git diff --name-only origin/main...HEAD || true)
-          HIGH_RISK=$(echo "$CHANGED" | grep -E "(contracts/epistemic-status|contracts/validation-schema|agents/|workflows/|protocols/promotion|protocols/escalation|protocols/disagreement)" || true)
-          if [ -n "$HIGH_RISK" ]; then
-            echo "HIGH_RISK_CHANGED=true" >> "$GITHUB_OUTPUT"
-            echo "High-Risk paths changed:"
-            echo "$HIGH_RISK"
-          fi
-      - name: Request human review (never auto-merge high-risk)
-        if: steps.check.outputs.HIGH_RISK_CHANGED == 'true'
+          echo "🟡 RISK = MEDIUM —— references/ 等变更需 Human 审查，不自动合并"
+      - name: High risk → never auto-merge
+        if: steps.risk.outputs.risk == 'high'
         run: |
-          echo "🛑 HIGH-RISK CHANGE DETECTED"
-          echo "epistemic promotion / validation policy / agent orchestration 变更"
+          echo "🛑 RISK = HIGH —— agents/workflows/contracts 核心/protocols/rules 变更"
           echo "即使 Quality Gate PASS，也必须 Human Owner 审查后手动合并"
           echo "Progressive Autonomy Phase 4: 重大 Skill 架构改变永远需要人工 Gate"

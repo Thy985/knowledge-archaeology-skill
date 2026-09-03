@@ -34,15 +34,8 @@ import ka_engine  # noqa: E402
 
 EVALS_DIR = REPO_ROOT / "evals"
 
-# 硬门槛（用户明确定义，不可放松）
-PROMOTION_GATE = {
-    "regression": True,
-    "critical_coverage_min": 0.90,
-    "fidelity_min": 0.95,
-    "abstraction_validity_min": 0.90,
-    "false_acceptance_max": 0.10,
-    "critical_regressions_allowed": 0,
-}
+# 硬门槛（用户明确定义，不可放松）—— 从 rules/quality-gates.json 权威规则集加载，禁止硬编码
+PROMOTION_GATE = ka_engine.get_promotion_gate()
 
 # 各 evals 子目录的评分文件
 EVAL_SCHEMA = {

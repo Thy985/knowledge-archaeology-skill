@@ -20,17 +20,27 @@ CI 测试的不是"代码有没有编译过"，而是**"Skill 这个知识生产
 |----|------|---------|
 | Layer 1 | Contract Tests | Skill 结构完整性（目录/文件/枚举/铁律） |
 | Layer 2 | Deterministic Unit Tests | Epistemic Promotion / 聚合规则确定性逻辑 |
+| Layer 2.1 | Ruleset + PR Risk | 规则集合法性 + 自动合并风险自动分级 |
 | Layer 3 | Knowledge Regression Tests | Codex Gold Records——过去犯过的错误永久不能再现 |
 | Layer 4 | Benchmark Tests | Quality Gates（硬门槛，Promotion Gate） |
 | Layer 5 | Mutation / Adversarial Tests | 系统能否识别自己的错误（坏知识检测） |
+
+**权威规则集（`rules/*.json`）**：所有阈值集中于此，CI 与引擎统一加载，禁止代码硬编码。
+- `quality-gates.json` — Promotion Gate 硬门槛
+- `promotion-rules.json` — Epistemic Promotion 晋升规则
+- `ek-graph-rules.json` — EK Graph 质量规则 + 三层配比
+- `risk-paths.json` — 自动合并风险分级路径
 
 **Quality Gate**：5 层全 PASS 才允许合并——不是"CI 通过就无条件合并"，而是"通过一组严格 Knowledge Quality Gates 才允许自动合并到生产 Skill"。
 
 **硬门槛（Promotion Gate）**：regression pass / critical_coverage ≥ 0.90 / fidelity ≥ 0.95 / abstraction_validity ≥ 0.90 / false_acceptance ≤ 0.10 / critical_regressions = 0。即使总分 +10%，只要 Critical Coverage -4% → FAIL。
 
-**Progressive Autonomy**：Phase 1 CI PASS → 人工审（默认）；Phase 2 低风险自动合并（label: auto-merge-low-risk）；Phase 4 重大架构改变（epistemic promotion / validation policy / agent orchestration）永远人工 Gate。
+**Progressive Autonomy（`rules/risk-paths.json` 自动分级，不依赖人工 label）**：
+- **Low**（tests/benchmarks/evals/evolution/docs）→ Quality Gate PASS → 自动合并
+- **Medium**（references/）→ 人工审
+- **High**（agents/workflows/contracts 核心/protocols/rules/ka_engine）→ **永不自动合并**，必须 Human Gate
 
-本地跑：`python tools/run_all_tests.py`
+本地跑：`python tools/run_all_tests.py`；PR 风险判定：`python tools/evaluate_pr_risk.py <changed_files...>`
 
 ## 目录结构
 
@@ -41,16 +51,17 @@ CI 测试的不是"代码有没有编译过"，而是**"Skill 这个知识生产
 ├── protocols/               # 协作协议（盲重建/晋升门/交接/冲突/升级）
 ├── references/              # 方法论参考（五层阶梯/三层架构/七类流/飞书落地）
 ├── workflows/               # 主流程（考古/验证/基准测试）
+├── rules/                   # ★ 权威规则集（quality-gates / promotion-rules / ek-graph-rules / risk-paths）
 ├── tests/                   # 5 层 CI 测试
 │   ├── contract/            # Layer 1
-│   ├── unit/                # Layer 2
+│   ├── unit/                # Layer 2 + 2.1（规则集/PR 风险）
 │   ├── regression/          # Layer 3（Codex Gold Records）
 │   ├── benchmark/           # Layer 4（Quality Gates）
 │   └── mutation/            # Layer 5（坏知识检测）
 ├── benchmarks/              # 项目基准（codex/…）：Gold Records + Critical Findings
 ├── evals/                   # 评分数据（fidelity/coverage/abstraction/flow/epistemic）
 ├── evolution/               # 进化记录（failures/proposals/promotion）
-├── tools/                   # ka_engine.py（确定性逻辑引擎）+ run_all_tests.py
+├── tools/                   # ka_engine.py（规则驱动引擎）+ evaluate_pr_risk.py（风险分级）+ run_all_tests.py
 └── .github/workflows/       # skill-quality-gates.yml（5 层 CI + Progressive Autonomy）
 ```
 
