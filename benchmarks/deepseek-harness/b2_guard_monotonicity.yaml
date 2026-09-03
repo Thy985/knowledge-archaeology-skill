@@ -1,0 +1,9 @@
+# B-2 Gold Record —— 守卫单调性（security_invariant 回归）
+# 来源：deepseek-harness 独立验证 B-2（scoped.spec.ts:303）
+# 防止：把 guard 写成"force allow 可以 bypass guard"
+gold_type: security_invariant
+knowledge_id: "b2_guard_monotonicity"
+invariant: "工具守卫是单调拒绝：pre-execute 的 force allow 不能 bypass 后续 guard 拒绝（first monotonic denial 即拦停）"
+required_present: true
+evidence_source: "packages/core/tools/src/index.ts:697；scoped.spec.ts:303"
+assertion: "若未来考古把 guard 写成可被 force allow 绕过 → CI FAIL"

@@ -430,3 +430,89 @@ def is_valid_flow_type(ft: str) -> bool:
 
 def is_valid_edge_type(et: str) -> bool:
     return et in VALID_EK_EDGE_TYPES
+
+
+# ---------------------------------------------------------------------------
+# P-007 · Flow Sequence Truth（flow-schema 顺序锚点校验，Layer 2 + Layer 5）
+# ---------------------------------------------------------------------------
+def validate_flow_sequence(chain: List[Dict[str, Any]]) -> Dict[str, Any]:
+    """校验 flow chain 的**顺序真实性**（deepseek-harness F-05 教训：approval/guards 位置颠倒仍被放行）。
+
+    判定规则：
+    - chain 步骤数 < 2 → 无需顺序校验（pass）
+    - ≥2 步骤且**无任何步骤携带 `sequence_anchor`**（或 chain 无 `sequence_anchors`）→ SEQUENCE_UNVERIFIED（detect）
+    - 有显式 `sequence_anchors: [{from, to}]` 且 `from` 的索引 ≥ `to` 的索引 → SEQUENCE_CONTRADICTED（detect）
+
+    返回: {"pass": bool, "unverified": [...], "contradictions": [...], "note": str}
+    """
+    anchored = 0
+    explicit_anchors: List[Dict[str, Any]] = []
+    for step in chain:
+        if not isinstance(step, dict):
+            continue
+        sa = step.get("sequence_anchor")
+        if sa:
+            anchored += 1
+            if isinstance(sa, dict):
+                explicit_anchors.append(sa)
+        a = step.get("sequence_anchors") or []
+        if isinstance(a, list):
+            explicit_anchors.extend(a_item for a_item in a if isinstance(a_item, dict))
+
+    # 空 chain 或（<2 步骤 且 无显式锚点声明）→ 无需顺序校验
+    if not chain or (len(chain) < 2 and not explicit_anchors):
+        return {"pass": True, "unverified": [], "contradictions": [], "note": "chain 过短且无顺序声明，无需顺序校验"}
+
+    if anchored == 0 and not explicit_anchors:
+        return {"pass": False,
+                "unverified": [f"chain 有 {len(chain)} 步骤但无任何顺序锚点（sequence_anchor / sequence_anchors）"],
+                "contradictions": [],
+                "note": "≥2 步骤的 chain 必须带顺序锚点（P-007 Flow Sequence Truth）——顺序是 Flow 可回溯性的核心"}
+
+    def _idx(x: Any) -> Optional[int]:
+        if isinstance(x, int):
+            return x
+        m = re.search(r"step[_\s]?(\d+)", str(x))
+        return int(m.group(1)) if m else None
+
+    contradictions = []
+    for a in explicit_anchors:
+        frm, to = a.get("from"), a.get("to")
+        if frm is None or to is None:
+            continue
+        fi, ti = _idx(frm), _idx(to)
+        if fi is not None and ti is not None and fi >= ti:
+            contradictions.append({"from": frm, "to": to, "problem": f"顺序颠倒：from(idx {fi}) >= to(idx {ti})"})
+
+    return {"pass": len(contradictions) == 0 and (anchored > 0 or explicit_anchors),
+            "unverified": [], "contradictions": contradictions,
+            "note": "flow sequence truth 校验完成"}
+
+
+# ---------------------------------------------------------------------------
+# P-009 · Abstraction Scope Boundary（L3+ KO scope 边界，Layer 2 + Layer 5）
+# ---------------------------------------------------------------------------
+def validate_scope_boundary(ko: Dict[str, Any]) -> Dict[str, Any]:
+    """校验 L3+ KO 的 scope 边界（deepseek-harness KO-03 教训：fail-closed 族泛化到全部权限面）。
+
+    判定规则：
+    - abstraction ∈ {L3, L4, L5} 必须声明 scope.applies_when 与 scope.does_not_apply_when
+    - claim 含绝对化泛化词（所有/全部/整个/任何/每个执行/所有路径/all/every…）
+      且 scope 无 does_not_apply_when → scope 可能被夸大（detect）
+
+    返回: {"pass": bool, "issues": [...]}
+    """
+    abstraction = ko.get("abstraction", "L0")
+    scope = ko.get("scope") or {}
+    claim = ko.get("claim", "")
+    issues: List[str] = []
+    if abstraction in ("L3", "L4", "L5"):
+        if not scope.get("applies_when"):
+            issues.append("L3+ KO 必须声明 scope.applies_when")
+        if not scope.get("does_not_apply_when"):
+            issues.append("L3+ KO 必须声明 scope.does_not_apply_when（P-009 scope 边界反例）")
+        absolutes = ["所有", "全部", "整个", "任何", "每个执行", "所有路径", "所有执行", "always", "all", "every", "全部权限"]
+        has_absolute = any(w in claim for w in absolutes)
+        if has_absolute and not scope.get("does_not_apply_when"):
+            issues.append("claim 含绝对化泛化词（所有/全部）但 scope 无 does_not_apply_when——scope 可能被夸大")
+    return {"pass": len(issues) == 0, "issues": issues}

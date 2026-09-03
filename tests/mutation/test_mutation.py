@@ -190,6 +190,59 @@ def mutation_engineering_l3() -> dict:
     return {"name": "engineering_l3", "detected": detected, "issues": len(issues)}
 
 
+def mutation_flow_sequence_error() -> dict:
+    """Mutation 9（P-007）：Flow chain 顺序颠倒/无顺序锚点（deepseek-harness F-05 教训）。
+
+    真实：collapse-check → pre-execute → approval → guards → execute
+    Mutation：approval 被放到 guards 之后（顺序颠倒）且无顺序锚点 → 必须 detect。
+    """
+    chain_wrong = [
+        {"node": "collapse-check", "symbol": "tools/index.ts:1367", "role": "前置拒绝"},
+        {"node": "pre-execute", "symbol": "tools/index.ts:144", "role": "pre"},
+        {"node": "guards", "symbol": "tools/index.ts:697", "role": "守卫"},
+        {"node": "approval", "symbol": "user-approval/index.ts:207", "role": "审批"},  # 位置颠倒
+        {"node": "execute", "symbol": "tools/index.ts:227", "role": "执行"},
+    ]
+    # 无任何顺序锚点 → SEQUENCE_UNVERIFIED
+    r1 = ka_engine.validate_flow_sequence(chain_wrong)
+    detect_no_anchor = not r1["pass"] and len(r1["unverified"]) > 0
+    # 带显式锚点但顺序颠倒 → SEQUENCE_CONTRADICTED
+    chain_anchored = [
+        {"node": "guards", "symbol": "tools/index.ts:697", "role": "守卫",
+         "sequence_anchor": {"from": "step_3", "to": "step_4", "evidence": "tools/index.ts:1468"}},
+        {"node": "approval", "symbol": "user-approval/index.ts:207", "role": "审批",
+         "sequence_anchor": {"from": "step_4", "to": "step_3", "evidence": "tools/index.ts:1400"}},  # 颠倒
+    ]
+    r2 = ka_engine.validate_flow_sequence(chain_anchored)
+    detect_contradiction = not r2["pass"] and len(r2["contradictions"]) > 0
+    return {"name": "flow_sequence_error", "detected": detect_no_anchor or detect_contradiction,
+            "unverified": len(r1["unverified"]), "contradictions": len(r2["contradictions"])}
+
+
+def mutation_scope_overgeneralization() -> dict:
+    """Mutation 10（P-009）：L4 KO scope 泛化（deepseek-harness KO-03 教训）。
+
+    真实：fail-closed 族仅适用受限执行路径（有 does_not_apply_when: 非受限只读路径）。
+    Mutation：claim 声称覆盖"全部权限面/所有执行"，scope 无 does_not_apply_when → 必须 detect。
+    """
+    ko = {
+        "knowledge_layer": "generalized",
+        "claim": "所有执行路径都必须经过 fail-closed 权限族审批",
+        "category": "PERMISSION",
+        "abstraction": "L4",
+        "value": "A",
+        "epistemic_status": "Principle",
+        "derivation": {"facts": ["EK-10", "EK-09", "EK-07"], "promotion_arguments": ["..."]},
+        "evidence": {"supporting": []},
+        "scope": {"applies_when": "Agent 系统"},  # 缺 does_not_apply_when
+        "confidence": "high",
+        "aggregation_rule": {"rule": "R3", "cluster_eks": ["EK-10", "EK-09", "EK-07"], "naming": "不变量簇", "scope_expansion": ""},
+    }
+    issues = ka_engine.validate_scope_boundary(ko)["issues"]
+    detected = any("does_not_apply_when" in i or "绝对化泛化" in i for i in issues)
+    return {"name": "scope_overgeneralization", "detected": detected, "issues": len(issues)}
+
+
 MUTATIONS = [
     mutation_over_abstraction,
     mutation_over_abstraction_l4,
@@ -200,6 +253,8 @@ MUTATIONS = [
     mutation_fact_to_principle,
     mutation_law_without_cross_project,
     mutation_engineering_l3,
+    mutation_flow_sequence_error,
+    mutation_scope_overgeneralization,
 ]
 
 

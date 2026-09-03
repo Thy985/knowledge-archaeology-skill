@@ -1,0 +1,10 @@
+# B-5 Gold Record —— legacy 格式硬拒绝（required_mechanism 回归）
+# 来源：deepseek-harness 独立验证 B-5 + IF-09（session/src/index.ts:216,362-370）
+# 防止：把 legacy 兼容策略写成"静默支持"
+gold_type: required_mechanism
+knowledge_id: "b5_legacy_hard_reject"
+mechanism: "session 对 request/header-delta 旧格式与 reason:'fallback' 旧原因硬拒绝（抛错而非静默支持）——兼容策略是'拒绝而非支持'"
+required_present: true
+abstraction: "L1"
+evidence_source: "packages/core/session/src/index.ts:216,362-370"
+assertion: "若未来考古把 legacy 兼容写成静默降级支持 → CI FAIL"

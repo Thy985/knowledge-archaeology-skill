@@ -1,0 +1,21 @@
+# 家族枚举 Gold Record —— 同构机制家族必须全实例枚举（P-008 回归）
+# 来源：deepseek-harness 独立验证（guard 家族只发现 timeout-policy，遗漏 repeat-tool-reminder；seam 家族遗漏 settings）
+# 防止：考古对机制家族"找到一个实例就宣布覆盖"
+gold_type: required_family_instances
+knowledge_id: "family_enumeration"
+coverage_area: "同构机制家族全实例枚举"
+families:
+  guard:
+    - "timeout-policy"
+    - "repeat-tool-reminder"
+  capability_seam:
+    - "llm"
+    - "sandbox"
+    - "credentials"
+    - "settings"
+    - "subagent"
+required_present: true
+required_facts:
+  - "guard 家族必须枚举 enforcer 与 advisory 两类成员"
+  - "Capability Seam 家族必须枚举全部 provider 实例"
+assertion: "若未来考古对任一机制家族只枚举部分实例 → CI FAIL（Critical Family Missing）"

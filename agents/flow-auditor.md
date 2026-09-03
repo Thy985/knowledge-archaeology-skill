@@ -35,3 +35,11 @@ v3.1 新增：**EK 边 ↔ Flow Edge 一致性**——EK 的 causal/dependency �
 - ❌ 不放过"架构上看起来合理"的 Edge（v1 教训：approval 分支被简化为三态，实际四态）
 - ❌ 不放过 KO 与 Flow 的矛盾（v1 教训：Synthesizer 把精确 Flow 简化并引入错误，Flow 反而比 KO 准）
 - ❌ v3.1：不放过 EK 边与 Flow Edge 的矛盾——虚假的 EK 连接会造成错误的知识聚合
+
+## P-007 增补 · 第 0 步：Sequence Truth 校验（候选 v3.3）
+> deepseek-harness F-05 教训：approval 在 guards 之后（实际在前），symbol 全存在仍判 VERIFIED。
+**必须在逐 Edge 验证之前执行**：
+1. 对每条 chain，用 `ka_engine.validate_flow_sequence(chain)` 校验顺序锚点
+2. `SEQUENCE_UNVERIFIED`（≥2 步骤无任何顺序锚点）→ 不得 VERIFIED
+3. `SEQUENCE_CONTRADICTED`（顺序锚点 from ≥ to）→ INCORRECT → blocker → Revise
+4. 关键权限流（authority/policy）顺序锚点是**硬要求**，不能豁免
