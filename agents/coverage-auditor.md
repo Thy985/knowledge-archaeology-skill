@@ -75,3 +75,16 @@ v3.1 新增：**EK 图覆盖**——孤立 EK 检测（无边 EK 比例）、子
 - ❌ 非安全敏感项目不得激活（避免噪音）
 - ❌ 不以"该项目不是安全工具"为由跳过已触发信号（security 信号命中即激活）
 - ❌ 不把"某个维度无此通道"写成 MISSING（无此通道 = 不适用，注明即可）
+
+## P-015 增补 · self-defense 维度：核对失效路径（P-013 补强，候选 v3.5）
+> SkillFortify 教训（ARCH-2026-09-05-001，IF-1）：over-declaration 防护（声明 ADMIN>=3 或通配 -> HIGH finding "least-privilege checking cannot constrain this skill"）+ unparsable 声明 fail-safe（LOW）初轮考古 MISSING，独立 Auditor 才发现。
+> **P-013 已覆盖"攻击者输入/信任边界/bypass"；本增补补强"核对失效路径"**——安全/验证系统在"核对无法进行"时如何显式报告，而非静默放行。
+
+**新增步骤（激活后强制，缺 → `CRITICAL SECURITY MISSING`）**：
+1. **核对失效路径审计**：安全机制的核对/校验逻辑遇到（a）输入过宽导致无法约束（over-declaration/wildcard）、（b）无法解析的声明/配置/输入、（c）近似盲区（分析器只覆盖部分资源类型）时，系统是否**显式报告**（产生 finding / 拒绝 / 降级）而非静默 PASS？
+2. **静默放行搜索**：显式搜索"核对失败但无报告"的路径（unparsed 丢弃 / 异常吞掉 / fallback 放行）——找到即 HIGH 级发现
+3. **近似边界声明**：形式化保证（soundness 等）的实际覆盖范围必须被考古（哪些输入/资源在保证内，哪些不在）
+
+**禁则**：
+- ❌ 不把"核对失效静默 PASS"当正常行为（安全系统中是缺陷信号）
+- ❌ 不以"文档声明 sound"替代"实现核对失效行为"审计

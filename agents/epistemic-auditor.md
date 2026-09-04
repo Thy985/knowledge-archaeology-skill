@@ -25,3 +25,11 @@ v2 强化：**禁止 Fact→Principle 无中间推导跃迁**（必须逐级：F
 - ❌ 不放过"听起来对但无证据"的 Principle
 - ❌ 不把未跨项目验证的 Law 放行
 - ❌ 不放过无中间推导的层级跃迁（v2 重点）
+
+## P-014 增补 · 文档声称 vs 实现事实分裂检查（候选 v3.5）
+> SkillFortify 教训（ARCH-2026-09-05-001，C-01）：文档声称 "without over-approximation"（措辞接近 exact），实现是 over-approximation。若考古者照抄文档，会把 soundness 机制误述为"精确分析"而非"有界近似"。
+
+**新增检查**：
+- 当同一性质在文档与实现中有不同表述时，epistemic 状态必须以**实现**为准（实现是 Fact 级证据，文档是 Obs 级）
+- 文档声称的性质若在实现/测试中无对应物 → 该性质降为 Hypothesis（进 Candidates），不得升维
+- 判断句（"sound"/"guaranteed"/"no false negative"）必须声明其依据层：实现证明 / 测试验证 / 文档声称 / 论文引用

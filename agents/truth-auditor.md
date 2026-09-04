@@ -43,3 +43,19 @@ v3.1 新增：**EK 边（links）真实性核验**——EK 层的事实不只是
 2. **sequence_truth**（P-007）：关键时序（authority/policy flow 顺序）与真实代码一致——用 `validate_flow_sequence` 交叉校验
 3. **enumeration_truth**（P-008）：同构机制家族被完整枚举——用家族清单交叉校验
 > 只验证存在性不验证时序/枚举 → 判定 PARTIALLY_VERIFIED（不得 PASS）
+
+## P-014 增补 · 文档-实现对账（doc-impl reconciliation，候选 v3.5）
+> SkillFortify 教训（ARCH-2026-09-05-001，C-01）：Formal-Foundations 声称能力推断 "without over-approximation"，实现明确是 "conservative over-approximation"——文档形式化声称与实现矛盾，初轮未捕获。
+> **设计文档中的形式化性质声称（formal guarantee / theorem / "no false negative" 类表述）不能作为实现事实的替代。** 必须与实现/测试对账。
+
+**触发信号**：项目中存在"形式化性质声称"文档（formal foundations / proofs / guarantees / "sound"/"complete"/"no false negative" 等措辞）。
+
+**新增步骤（触发即强制，缺 → 记 MISSING）**：
+1. 列出设计文档声称的每条形式化性质（文件:行号）
+2. 逐条对账实现：实现注释/文档字符串/测试是否支持该声称？（实现是否真的做 X？）
+3. 不一致 → 产出 CONTRADICTED 或 NEEDS_HUMAN_REVIEW，不得静默采用文档表述
+4. 一致但文档措辞与实现机制不同名（如"exact" vs "over-approximation"）→ 标注措辞失准，进 Candidates
+
+**禁则**：
+- ❌ 不把"文档声称"直接升维为"实现事实"（设计文档是 Obs 级证据）
+- ❌ 不因"文档写得很正式/带证明"就跳过对账（形式完整 ≠ 实现真实）
