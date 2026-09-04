@@ -1,0 +1,201 @@
+{
+  "_meta": {
+    "project": "sample-agent-runtime",
+    "skill_version": "v3.2",
+    "generated_by": "tools/demo.py 可执行骨架",
+    "note": "本文件模拟一次完整考古的产物（facts→EK→KO），供 5 分钟快速体验。完整考古需在 Agent 环境加载 skill 运行 workflows/archaeology.md。"
+  },
+  "facts": [
+    {"id": "F-01", "claim": "Agent 只产出 intent，执行权在 PermissionGate（agent.py:28）", "source": "examples/sample-project/src/agent.py:28"},
+    {"id": "F-02", "claim": "Forbidden 不携带 proposed_amendment（permission_gate.py:22）", "source": "examples/sample-project/src/permission_gate.py:22"},
+    {"id": "F-03", "claim": "批准后 append allow 前缀规则并持久化（exec_policy.py:30）", "source": "examples/sample-project/src/exec_policy.py:30"},
+    {"id": "F-04", "claim": "Guardian 超时/解析错误均 denied（guardian.py:18,25）", "source": "examples/sample-project/src/guardian.py:18"},
+    {"id": "F-05", "claim": "失败超 5 次升级给人类而非硬闯（agent.py:18,33）", "source": "examples/sample-project/src/agent.py:33"},
+    {"id": "F-06", "claim": "测试断言 Forbidden 无修正案（test_gate.py:15）", "source": "examples/sample-project/tests/test_gate.py:15"}
+  ],
+  "eks": [
+    {
+      "id": "EK-01",
+      "knowledge_layer": "engineering",
+      "claim": "三态审批门（Skip/NeedsApproval/Forbidden）把'判断'与'放行'分离",
+      "category": "PERMISSION",
+      "abstraction": "L2",
+      "value": "B",
+      "epistemic_status": "Validated Pattern",
+      "derivation": {"facts": ["F-01", "F-02"]},
+      "evidence": {"supporting": ["examples/sample-project/src/permission_gate.py:22,36"]},
+      "scope": {"applies_when": ["Agent 系统需要审批执行"], "does_not_apply_when": ["无副作用纯查询"]},
+      "confidence": "high",
+      "links": [
+        {"type": "mechanism", "to": "EK-02", "note": "同一安全不变量（拒绝不可学习）"},
+        {"type": "causal", "to": "EK-03", "note": "NeedsApproval 通过后才可能固化策略"}
+      ],
+      "provenance": {"discovered_by": "code-analyst"}
+    },
+    {
+      "id": "EK-02",
+      "knowledge_layer": "engineering",
+      "claim": "Forbidden 不携带修正案——'拒绝不可学习'安全不变量",
+      "category": "PERMISSION",
+      "abstraction": "L2",
+      "value": "A",
+      "epistemic_status": "Validated Pattern",
+      "derivation": {"facts": ["F-02", "F-06"]},
+      "evidence": {"supporting": ["examples/sample-project/src/permission_gate.py:22", "examples/sample-project/tests/test_gate.py:15"]},
+      "scope": {"applies_when": ["策略固化机制存在时"], "does_not_apply_when": []},
+      "confidence": "high",
+      "links": [
+        {"type": "mechanism", "to": "EK-01", "note": "三态的一部分"},
+        {"type": "constraint", "to": "EK-03", "note": "约束可固化的规则来源只能是审批通过"},
+        {"type": "constraint", "to": "EK-04", "note": "denied 路径同样不产生学习"}
+      ],
+      "provenance": {"discovered_by": "test-analyst"}
+    },
+    {
+      "id": "EK-03",
+      "knowledge_layer": "engineering",
+      "claim": "审批→策略固化→未来免审 的 Policy Flow 闭环（exec_policy 持久化）",
+      "category": "WORKFLOW",
+      "abstraction": "L2",
+      "value": "B",
+      "epistemic_status": "Validated Pattern",
+      "derivation": {"facts": ["F-03"]},
+      "evidence": {"supporting": ["examples/sample-project/src/exec_policy.py:30,38"]},
+      "scope": {"applies_when": ["需要避免每次人工确认"], "does_not_apply_when": ["策略不持久化"]},
+      "confidence": "high",
+      "links": [
+        {"type": "causal", "to": "EK-01", "note": "审批产出修正案 → 固化为规则"},
+        {"type": "subsystem", "to": "EK-01", "note": "同属权限子系统"}
+      ],
+      "provenance": {"discovered_by": "policy-governance-analyst"}
+    },
+    {
+      "id": "EK-04",
+      "knowledge_layer": "engineering",
+      "claim": "Guardian fail-closed：超时/解析错误一律拒绝，不确定即不放行",
+      "category": "RUNTIME",
+      "abstraction": "L2",
+      "value": "A",
+      "epistemic_status": "Validated Pattern",
+      "derivation": {"facts": ["F-04"]},
+      "evidence": {"supporting": ["examples/sample-project/src/guardian.py:18,25"]},
+      "scope": {"applies_when": ["安全关键路径"], "does_not_apply_when": ["纯读取"]},
+      "confidence": "high",
+      "links": [
+        {"type": "contrast", "to": "EK-05", "note": "fail-closed vs 升级人类——两种'不自行执行'策略"},
+        {"type": "constraint", "to": "EK-02", "note": "denied 同样不学习"}
+      ],
+      "provenance": {"discovered_by": "authority-analyst"}
+    },
+    {
+      "id": "EK-05",
+      "knowledge_layer": "engineering",
+      "claim": "失败超 5 次升级给人类（停止条件），Agent 不自旋不硬闯",
+      "category": "AGENT",
+      "abstraction": "L2",
+      "value": "B",
+      "epistemic_status": "Validated Pattern",
+      "derivation": {"facts": ["F-05"]},
+      "evidence": {"supporting": ["examples/sample-project/src/agent.py:18,33"]},
+      "scope": {"applies_when": ["Agent 自动化任务"], "does_not_apply_when": []},
+      "confidence": "high",
+      "links": [
+        {"type": "contrast", "to": "EK-04", "note": "同为'不自行执行'的不同策略"},
+        {"type": "dependency", "to": "EK-01", "note": "升级依赖 Gate 的裁决"}
+      ],
+      "provenance": {"discovered_by": "failure-analyst"}
+    },
+    {
+      "id": "EK-06",
+      "knowledge_layer": "engineering",
+      "claim": "测试揭示系统真正重视的行为：拒绝不可学习 + 策略固化免审 + fail-closed",
+      "category": "TESTING",
+      "abstraction": "L2",
+      "value": "B",
+      "epistemic_status": "Validated Pattern",
+      "derivation": {"facts": ["F-06"]},
+      "evidence": {"supporting": ["examples/sample-project/tests/test_gate.py"]},
+      "scope": {"applies_when": ["安全不变量验证"], "does_not_apply_when": []},
+      "confidence": "high",
+      "links": [
+        {"type": "dependency", "to": "EK-02", "note": "测试守护该不变量"},
+        {"type": "dependency", "to": "EK-03", "note": "测试验证免审闭环"},
+        {"type": "dependency", "to": "EK-04", "note": "测试验证 fail-closed"}
+      ],
+      "provenance": {"discovered_by": "test-analyst"}
+    }
+  ],
+  "kos": [
+    {
+      "id": "KO-01",
+      "knowledge_layer": "generalized",
+      "claim": "Intelligence ≠ Authority：判断力（智能）与执行权（权威）是两个独立维度",
+      "category": "AGENT",
+      "abstraction": "L4",
+      "value": "A",
+      "epistemic_status": "Validated Pattern",
+      "aggregation_rule": {
+        "rule": "R1",
+        "cluster_eks": ["EK-01", "EK-04", "EK-05"],
+        "naming": "产生→验证→授权→执行→记录 五段式架构指纹（跨 Gate/Guardian/Agent 三个独立实现）"
+      },
+      "derivation": {
+        "facts": ["EK-01", "EK-04", "EK-05"],
+        "promotion_arguments": [
+          "跨 3 个独立模块（permission_gate/guardian/agent）反复出现同一结构：Agent 判断 → 独立 Gate 授权 → 才执行",
+          "ADR-0001 明确记录被放弃方案：Agent 自证安全后自执行（自我证明不构成独立验证）",
+          "测试（test_gate.py）把该不变量固化为可执行断言"
+        ]
+      },
+      "evidence": {"supporting": ["examples/sample-project/src/*", "examples/sample-project/tests/test_gate.py", "examples/sample-project/docs/decisions/ADR-0001-authority-separation.md"]},
+      "flows": {"control": "User→Agent→PermissionGate→Executor", "authority": "Agent(judge) ≠ Executor(execute)"},
+      "flow_traceability": ["authority: agent.py:28 → permission_gate.py:22 → executor.run"],
+      "scope": {
+        "applies_when": ["AI/Agent 系统涉及状态变更", "任何'自动判断+自动执行'的架构"],
+        "does_not_apply_when": ["纯只读查询"]
+      },
+      "confidence": "high",
+      "provenance": {"discovered_by": "authority-analyst", "supported_by": ["code-analyst", "test-analyst"]},
+      "validation": {"blind_reconstruction": "performed"}
+    },
+    {
+      "id": "KO-02",
+      "knowledge_layer": "generalized",
+      "claim": "拒绝不可学习：被系统拒绝的动作不能通过任何路径变成可执行规则",
+      "category": "PERMISSION",
+      "abstraction": "L3",
+      "value": "B",
+      "epistemic_status": "Validated Pattern",
+      "aggregation_rule": {
+        "rule": "R3",
+        "cluster_eks": ["EK-02", "EK-03", "EK-06"],
+        "naming": "多条不变量边（Forbidden 无修正案 / 固化仅来自审批通过 / 测试断言）汇聚到同一安全不变量"
+      },
+      "derivation": {
+        "facts": ["EK-02", "EK-03", "EK-06"],
+        "promotion_arguments": [
+          "permission_gate.py:22（Forbidden 不携带修正案）+ exec_policy.py:38（幂等只接受审批来源）+ test_gate.py:15（测试锁定）三处独立证据"
+        ]
+      },
+      "evidence": {"supporting": ["examples/sample-project/src/permission_gate.py:22", "examples/sample-project/src/exec_policy.py:38", "examples/sample-project/tests/test_gate.py:15"]},
+      "flows": {"policy": "审批通过 → 修正案 → 固化 → 免审；拒绝 → 无修正案 → 不可学习"},
+      "flow_traceability": ["policy: permission_gate.py:36 → exec_policy.py:30"],
+      "scope": {
+        "applies_when": ["系统允许'把一次性授权固化为持久策略'"],
+        "does_not_apply_when": ["无策略固化机制"]
+      },
+      "confidence": "high",
+      "provenance": {"discovered_by": "test-analyst", "supported_by": ["policy-governance-analyst"]},
+      "validation": {"blind_reconstruction": "performed"}
+    }
+  ],
+  "candidates": [
+    {
+      "id": "C-001",
+      "hypothesis": "fail-closed（不确定即拒绝）是否总是优于 fail-open + 审计？",
+      "current_evidence": "sample-project guardian.py:18,25（单项目证据）",
+      "missing_evidence": "需要第二个项目（非安全关键场景）对照",
+      "status": "Hypothesis"
+    }
+  ]
+}
