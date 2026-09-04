@@ -305,6 +305,74 @@ def test_fake_aggregation_detected():
     assert report["fake_aggregations"], "同子系统式假聚合应被检测"
 
 
+
+# ---------------------------------------------------------------------------
+# P-007 · Flow Sequence Truth（确定性单测）
+# ---------------------------------------------------------------------------
+def test_flow_sequence_without_anchors_flagged():
+    """≥2 步骤的 chain 无顺序锚点 → SEQUENCE_UNVERIFIED（P-007）。"""
+    chain = [
+        {"node": "approval", "symbol": "a.ts:1", "role": "审批"},
+        {"node": "guards", "symbol": "g.ts:2", "role": "守卫"},
+    ]
+    r = ka_engine.validate_flow_sequence(chain)
+    assert not r["pass"], "无顺序锚点的 chain 必须被标记 SEQUENCE_UNVERIFIED"
+    assert len(r["unverified"]) > 0
+
+
+def test_flow_sequence_short_chain_ok():
+    """单步骤/空 chain 无需顺序校验。"""
+    assert ka_engine.validate_flow_sequence([])["pass"]
+    assert ka_engine.validate_flow_sequence([{"node": "x"}])["pass"]
+
+
+def test_flow_sequence_anchored_ok():
+    """带正确顺序锚点的 chain → pass。"""
+    chain = [
+        {"node": "approval", "symbol": "a.ts:1", "role": "审批",
+         "sequence_anchor": {"from": "step_1", "to": "step_2", "evidence": "a.ts:30"}},
+        {"node": "guards", "symbol": "g.ts:2", "role": "守卫",
+         "sequence_anchor": {"from": "step_2", "to": "step_3", "evidence": "g.ts:40"}},
+    ]
+    r = ka_engine.validate_flow_sequence(chain)
+    assert r["pass"], "正确顺序锚点应通过"
+
+
+def test_flow_sequence_contradiction_flagged():
+    """顺序锚点 from >= to → SEQUENCE_CONTRADICTED（P-007）。"""
+    chain = [
+        {"node": "guards", "symbol": "g.ts:2", "role": "守卫",
+         "sequence_anchor": {"from": "step_2", "to": "step_1", "evidence": "g.ts:40"}},
+    ]
+    r = ka_engine.validate_flow_sequence(chain)
+    assert not r["pass"], "顺序颠倒的锚点必须被检测"
+    assert len(r["contradictions"]) > 0
+
+
+# ---------------------------------------------------------------------------
+# P-009 · Abstraction Scope Boundary（确定性单测）
+# ---------------------------------------------------------------------------
+def test_scope_boundary_ok():
+    """L4 KO 有 applies_when + does_not_apply_when → pass。"""
+    ko = {"abstraction": "L4", "claim": "受限执行路径上的分层 fail-closed",
+          "scope": {"applies_when": "受限执行路径", "does_not_apply_when": "非受限只读路径"}}
+    assert ka_engine.validate_scope_boundary(ko)["pass"]
+
+
+def test_scope_boundary_missing_does_not_apply_flagged():
+    """L4 KO 缺 does_not_apply_when → detect（P-009）。"""
+    ko = {"abstraction": "L4", "claim": "所有执行路径必须审批", "scope": {"applies_when": "Agent 系统"}}
+    r = ka_engine.validate_scope_boundary(ko)
+    assert not r["pass"], "缺 does_not_apply_when 或绝对化泛化必须被检测"
+    assert len(r["issues"]) >= 1
+
+
+def test_scope_boundary_not_required_for_l2():
+    """L2 engineering 知识不强制 scope 双字段（只限 L3+）。"""
+    ko = {"abstraction": "L2", "claim": "某实现", "scope": {}}
+    assert ka_engine.validate_scope_boundary(ko)["pass"]
+
+
 # ---------------------------------------------------------------------------
 # 运行入口
 # ---------------------------------------------------------------------------

@@ -1,0 +1,10 @@
+# B-4 Gold Record —— plan-mode projection 折叠/恢复（required_mechanism 回归）
+# 来源：deepseek-harness 独立验证 B-4 + IF-05（plan-mode/src/index.ts）
+# 防止：把 plan mode 写成简单标志位，忽略 per-agent 协作状态（projection 折叠/恢复）
+gold_type: required_mechanism
+knowledge_id: "b4_plan_mode_recovery"
+mechanism: "plan mode 是 per-agent 协作状态：plan projection 折叠 session log（resume/fork 恢复）；sandbox 与 approval 独立于 plan state"
+required_present: true
+abstraction: "L2"
+evidence_source: "packages/plan/plan-mode/src/index.ts"
+assertion: "若未来考古把 plan mode 简化成单一标志位（无 projection 折叠/恢复）→ CI FAIL"

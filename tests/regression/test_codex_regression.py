@@ -19,6 +19,11 @@ sys.path.insert(0, str(REPO_ROOT / "tools"))
 import ka_engine  # noqa: E402
 
 GOLD_DIR = REPO_ROOT / "benchmarks" / "codex"
+# 多基准项目 Gold Records：codex（历史基线）+ deepseek-harness（P-012 新增）
+GOLD_DIRS = [
+    REPO_ROOT / "benchmarks" / "codex",
+    REPO_ROOT / "benchmarks" / "deepseek-harness",
+]
 
 
 def _load_yaml_plain(path: Path) -> dict:
@@ -68,12 +73,15 @@ def _load_yaml_plain(path: Path) -> dict:
 def load_gold_records() -> dict:
     """加载 benchmarks/codex/*.yaml 为 {gold_id: record}。"""
     records = {}
-    if not GOLD_DIR.exists():
-        return records
-    for f in sorted(GOLD_DIR.glob("*.yaml")):
-        rec = _load_yaml_plain(f)
-        gid = rec.get("knowledge_id") or rec.get("gold_type") or f.stem
-        records[gid] = rec
+    for gd in GOLD_DIRS:
+        if not gd.exists():
+            continue
+        for f in sorted(gd.glob("*.yaml")):
+            rec = _load_yaml_plain(f)
+            gid = rec.get("knowledge_id") or rec.get("gold_type") or f.stem
+            # 跨项目同名覆盖保护：knowledge_id 冲突时保留（后读优先）——用目录名前缀消歧
+            gid = f"{gd.name}/{gid}"
+            records[gid] = rec
     return records
 
 
@@ -173,6 +181,35 @@ def check_validation_discipline(rec: dict) -> list:
     return problems
 
 
+
+def check_required_family_instances(rec: dict) -> list:
+    """家族枚举回归（P-008）：同构机制家族必须声明实例清单。"""
+    problems = []
+    if not rec.get("required_present"):
+        problems.append(f"家族枚举回归: {rec.get('coverage_area')} 未标记为 required")
+    families = rec.get("families")
+    if not families:
+        problems.append(f"家族枚举回归: {rec.get('coverage_area')} 缺少 families 实例清单")
+    elif len(families) < 2:
+        problems.append(f"家族枚举回归: families 至少 2 个实例（当前 {len(families)}）——单实例不成'家族'")
+    if not rec.get("required_facts"):
+        problems.append(f"家族枚举回归: {rec.get('coverage_area')} 缺少 required_facts 明细")
+    return problems
+
+
+def check_required_sequence_fact(rec: dict) -> list:
+    """顺序事实回归（P-007）：关键 Flow 顺序必须被声明且可复算。"""
+    problems = []
+    if not rec.get("required_present"):
+        problems.append("顺序回归: 必须标记 required_present=true")
+    if not rec.get("sequence_claim"):
+        problems.append("顺序回归: 缺少 sequence_claim（关键顺序的声明）")
+    steps = rec.get("sequence_steps")
+    if not steps or not isinstance(steps, list) or len(steps) < 2:
+        problems.append("顺序回归: sequence_steps 必须 ≥2 步（顺序不可为单点）")
+    return problems
+
+
 # gold_type → 检查函数映射
 _CHECKERS = {
     "fact_regression": check_fact_regression,
@@ -183,6 +220,8 @@ _CHECKERS = {
     "required_flow_type": check_required_flow_type,
     "security_invariant": check_security_invariant,
     "validation_discipline": check_validation_discipline,
+    "required_family_instances": check_required_family_instances,
+    "required_sequence_fact": check_required_sequence_fact,
 }
 
 

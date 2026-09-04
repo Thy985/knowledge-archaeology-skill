@@ -46,3 +46,32 @@ v3.1 新增：**EK 图覆盖**——孤立 EK 检测（无边 EK 比例）、子
 - ❌ 不放过"evidence 层有但未升维"的 synthesis 遗漏（v1 教训：SF-05 有却未成 KO）
 - ❌ 不因"已有关注点很丰富"就跳过未覆盖的高密度子系统
 - ❌ v3.1：不放过孤立 EK 比例超标（>20%）——工程层"图"未建立，必然退化成模块说明
+
+## P-008 增补 · 同构机制家族全实例枚举（候选 v3.3）
+> deepseek-harness 教训：guard 家族只发现 timeout-policy（遗漏 repeat-tool-reminder）；seam 家族只发现 4 个（遗漏 settings）。
+> **机制家族 ≠ 子系统**——家族是"共享同一实现机制的实例集合"，子系统是"同一模块边界"。
+
+**新增步骤**：
+1. 识别机制家族（从依赖图/目录/注册表扫描）：guard 家族、seam/provider 家族、approval 策略层、policy provider 家族…
+2. 对每个家族**枚举全部实例**——缺任一实例 → `CRITICAL FAMILY MISSING`（等价 Critical Knowledge Missing）
+3. "找到一个实例就宣布覆盖" → 判定 MISSING
+4. 家族枚举结果写入覆盖矩阵（新增"家族枚举"列）
+
+## P-013 增补 · 安全敏感项目强制 self-defense 维度（候选 v3.4）
+> RAMPART 教训（ARCH-2026-09-04-001）：安全测试框架最核心的认知资产——"自噬防御"（框架如何防御它测试的攻击者输入：终端注入 / xdist 信任边界 / 载荷存储路径逃逸 / LLM judge 输出强校验 / 序列化大小上限）——在初轮考古中**依赖 auditor 自发深挖**而非契约驱动。
+> **强制子系统覆盖只保证"模块级覆盖"，不保证"safety-critical 项目的安全维度覆盖"。** 本增补加入第二覆盖维。
+
+**触发信号**（repository-mapper 检测到任一时激活）：
+- 项目属 agent 安全 / 红队 / 渗透 / 安全测试框架
+- 代码含：权限模型 / 信任边界 / 沙箱 / 注入处理 / payload 处理 / 提权路径 / agent-safety 机制
+
+**新增步骤（激活后强制，缺 → `CRITICAL SECURITY MISSING`）**：
+1. **攻击者输入四通道审计**：框架渲染 / 存储 / 传输 / 解析攻击者可控制输入（agent 响应、payload、第三方输出）的通道，每条通道的安全处理必须有 EK 代表
+2. **信任边界声明**：框架中哪些数据视为不可信、在哪个边界校验、校验规则是什么（schema/enum/白名单/大小上限）
+3. **绕过路径排查**：显式搜索 bypass / override / exception / alternate path / direct call / admin path / fallback / legacy path——每类"安全机制的逃逸口"要么有 EK，要么标注为已验证的安全例外
+4. **自身攻击面结论**：输出"框架是否已被自身安全机制覆盖"的判定（如：RAMPART 的终端注入防护、xdist trust boundary 声明）
+
+**禁则**：
+- ❌ 非安全敏感项目不得激活（避免噪音）
+- ❌ 不以"该项目不是安全工具"为由跳过已触发信号（security 信号命中即激活）
+- ❌ 不把"某个维度无此通道"写成 MISSING（无此通道 = 不适用，注明即可）

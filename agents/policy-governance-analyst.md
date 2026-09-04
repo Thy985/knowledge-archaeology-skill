@@ -39,3 +39,11 @@ Codex 的 exec_policy、上下文治理、审批→策略固化三个高价值�
 - ❌ 不把"存在一个 config 文件"当治理知识（必须说明该规则如何约束行为、如何被维护）
 - ❌ 不臆造策略链（每条 Policy Flow Edge 必须锚定真实符号）
 - ❌ 不把"文档写了规则"当"规则被执行"（需区分 intent 与 enforcement）
+
+## P-011 增补 · 策略来源三层 + 跨子会话传递（候选 v3.3）
+> deepseek-harness 教训：策略治理闭环分析未覆盖 delegation 播种。
+**策略治理闭环分析必须覆盖**：
+1. 策略来源三层：config 默认层 / session override / delegation 播种
+2. 跨子会话传递：authority boundary 上的策略继承（delegation override）
+3. 策略持久化事件（approval/policy）与重放
+> 闭环必须追溯到"策略如何被创建→持久化→约束未来决策→跨边界传递"

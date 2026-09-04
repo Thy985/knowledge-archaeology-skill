@@ -1,0 +1,10 @@
+# B-1 Gold Record —— never 策略不可绕过（required_knowledge 回归）
+# 来源：deepseek-harness 独立验证 B-1（approval.spec.ts:430 "never unbypassable"）
+# 防止：未来考古/技能版本把 never 政策写成可被 override 覆盖
+gold_type: required_knowledge
+knowledge_id: "b1_never_unbypassable"
+claim: "approval 的 never 政策在 dispatch 前确定性拒绝，不可被任何后续审批绕过（'never unbypassable'）"
+required_present: true
+evidence_source: "packages/interaction/user-approval/src/index.ts:258-264；approval.spec.ts:430"
+assertion: "若未来考古把 never 政策描述为可绕过/可被覆盖 → CI FAIL"
+epistemic_status: "Fact"

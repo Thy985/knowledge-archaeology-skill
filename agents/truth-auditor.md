@@ -35,3 +35,11 @@ v3.1 新增：**EK 边（links）真实性核验**——EK 层的事实不只是
 - ❌ 不跳过 Blind Reconstruction（未盲重建 = 结果无效）
 - ❌ 不改 claim——只报告问题，修改交给 Synthesizer
 - ❌ v3.1：不放过"无法验证的 EK 边"——虚假的连接比孤立的 EK 更危险（会造成错误的知识聚合）
+
+## P-010 增补 · Sequence / Enumeration Truth（候选 v3.3）
+> deepseek-harness 教训：6 Validator 全 PASS 仍漏 F-05 顺序错误 + 7 项遗漏。
+**truth 判定从"claim 有证据支持"扩展为三要素**：
+1. **existence_truth**：claim 声明的 symbol/事实存在
+2. **sequence_truth**（P-007）：关键时序（authority/policy flow 顺序）与真实代码一致——用 `validate_flow_sequence` 交叉校验
+3. **enumeration_truth**（P-008）：同构机制家族被完整枚举——用家族清单交叉校验
+> 只验证存在性不验证时序/枚举 → 判定 PARTIALLY_VERIFIED（不得 PASS）
