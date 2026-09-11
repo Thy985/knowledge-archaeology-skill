@@ -120,6 +120,26 @@ abstraction_validity ≥ 0.90    false_acceptance ≤ 0.10    critical_regressio
 
 ---
 
+## 📚 考古成果（knowledge-archaeology-corpus）
+
+> 本 Skill 的默认交付目标：所有**已完成考古**的项目结果沉淀在 [`Thy985/knowledge-archaeology-corpus`](https://github.com/Thy985/knowledge-archaeology-corpus) 仓库——每项目一个顶级目录 `projects/<project>/`，历史 Run 永不覆盖，Engineering Knowledge 宽底座与 KO 尖顶、验证报告（含 Contradictions / Counterexamples）一并保留。
+
+### 已考古项目（2026-09-11 快照）
+
+| 项目 | 版本（latest run） | 考古日期 | 说明 |
+|------|------|---------|------|
+| `deepseek-harness` | v0.1.5-rc.2（REFRESH） | 2026-09-11 | DeepSeek Agent Harness（初始 09-03 v0.1.2-rc.1 + refresh 双 run，45 EK / 10 KO） |
+| `clear` | — | 2026-09-10 | Agentic CLEAR 实证 |
+| `opencode` | — | 2026-09-09 | OpenCode |
+| `memgraphrag` | unversioned（HEAD） | 2026-09-06 | MemGraphRAG |
+| `skillfortify` | v0.6.0 | 2026-09-05 | Skill 加固 |
+| `rampart` | v0.1.0.dev0 | 2026-09-04 | Rampart |
+| `dogwood` / `evolver` / `dsh-memory-evolve` / `omnigent` | — | 更早轮 | 早期考古项目 |
+
+> 详细 run 信息（run_id / commit SHA / skill_version / quality metrics / validation result）见各项目 `projects/<project>/archaeology-runs/<run-id>/run_metadata.yaml`。
+
+---
+
 ## 🏗 5 层 CI（Skill 质量门系统）
 
 CI 测试的不是"代码有没有编译过"，而是 **"这个知识生产系统改完之后，知识质量有没有变差"**。
