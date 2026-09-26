@@ -64,4 +64,5 @@
 - [ ] 无"同子系统=聚合理由"的假聚合
 - [ ] 未验证假设标 Hypothesis（进 Candidates，不冒充知识）
 - [ ] 无机械复制仓库文档；无"为凑数量制造知识点"
+- [ ] **evidence 路径存在性检查**：EK 中引用的 repo 内路径（packages/spec/…）全部真实存在——`python tools/evidence_path_check.py <repo> <ek-file>...`（ARCH-2026-09-23 引入：EK-19/EK-10 曾写错路径，Truth Auditor 抽查未捕获）
 - [ ] 已按用户意图走对交付分支（默认 corpus / 授权飞书 / 仅本地）

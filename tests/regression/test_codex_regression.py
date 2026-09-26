@@ -258,3 +258,55 @@ def run() -> int:
 
 if __name__ == "__main__":
     sys.exit(run())
+
+
+# ---------------------------------------------------------------------------
+# ARCH-2026-09-23-001 (E2B) 新增回归：EK evidence 路径存在性
+# 背景：EK-19 写 `packages/js-sdk/src/commands/index.ts`（实际 sandbox/commands/）、
+#       EK-10 写 `src/inflight.ts`（实际 src/api/inflight.ts）——Truth Auditor 抽查
+#       未捕获，独立验证才暴露。此回归保证"evidence 路径必须真实存在"永久生效。
+# ---------------------------------------------------------------------------
+
+def test_evidence_path_check_regression() -> None:
+    import subprocess
+    import tempfile
+    from pathlib import Path
+
+    script = REPO_ROOT / "tools" / "evidence_path_check.py"
+    repo_dir = REPO_ROOT  # 用本仓库自身做路径解析（packages/ 等目录必存在）
+
+    with tempfile.TemporaryDirectory() as tmp:
+        tmp = Path(tmp)
+        # 历史实际错误路径 fixture（E2B 考古修正前）——脚本必须 FAIL
+        bad = tmp / "bad_ek.md"
+        bad.write_text(
+            "- **evidence**: `Commands.start` @ `packages/js-sdk/src/commands/index.ts`\n"
+            "- **evidence**: `limitConcurrency` @ `packages/js-sdk/src/inflight.ts`\n",
+            encoding="utf-8",
+        )
+        # 修正后路径 fixture（sandbox/commands 与 api/inflight 在本仓库不存在，同样 FAIL；
+        # 语义校验交给检查器本身——此处仅验证脚本可执行且按存在性判定）
+        good = tmp / "good_ek.md"
+        good.write_text(
+            "- **evidence**: `tools/ka_engine.py`\n"
+            "- **evidence**: `references/delivery.md`\n",
+            encoding="utf-8",
+        )
+
+        r_bad = subprocess.run(
+            [sys.executable, str(script), str(repo_dir), str(bad)],
+            capture_output=True, text=True,
+        )
+        assert r_bad.returncode != 0, (
+            "evidence_path_check 未捕获缺失路径（历史错误本应 FAIL）"
+        )
+
+        r_good = subprocess.run(
+            [sys.executable, str(script), str(repo_dir), str(good)],
+            capture_output=True, text=True,
+        )
+        assert r_good.returncode == 0, (
+            "evidence_path_check 误报真实存在路径（本仓库内文件应 PASS）"
+        )
+
+    print("  · EK evidence 路径存在性回归 PASS（缺失路径捕获 + 真实路径放行）")
